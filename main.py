@@ -814,11 +814,7 @@ def way(people, s_pos, e_pos):
                 move(people, s_pos, e_pos, chess)
                 return 1
             else:
-                #global begin
-
-                begin = not begin
-                master = False
-                # print("移动方式错误：车中间有子")
+                return 0
                 pass
         if chess[0] == "炮":
             if people == 0:  # 移动
