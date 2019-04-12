@@ -5,7 +5,7 @@ import pygame.font
 import sys
 import traceback
 from pygame.locals import *
-
+import time
 pygame.font.init()
 pygame.init()
 
@@ -31,7 +31,7 @@ hua = 0
 
 
 def writestate(str, set_pos, screen, color):
-
+    tan = True
     Font = pygame.font.SysFont("SimHei", 32)
     text = Font.render(str, True, color)
     pos = text.get_rect()
@@ -65,9 +65,9 @@ def writestate1(str, set_pos, screen, color):
     pos = text.get_rect()
     pos.center = set_pos
 
-    pygame.display.update()
+    #pygame.display.update()
     screen.blit(text, pos)
-    pygame.display.update()
+    #pygame.display.update()
     #draw_chessonboard()
 def deaw_feature(screen):
     #print("dwsdsddddddd")
@@ -99,7 +99,7 @@ def draw_aboard():
     my_bod = [a - 4, a - 4, rec_length + 8, rec_width + 8]
     pygame.draw.rect(screen, (255, 1, 1), my_bod, 1)
     pygame.draw.rect(screen, color_RECT, my_RECT, 2)
-    # pygame.display.flip()
+    #pygame.display.flip()
 
     for i in range(1, 8):
         pygame.draw.line(
@@ -337,7 +337,8 @@ def draw_aboard():
         (a + 13 * length, a + 8.5 * length),
         2,
     )
-    pygame.display.flip()
+    #pygame.display.update()
+    #pygame.display.flip()
 
     writestate1("楚河", (a + length + 50, a + 4 * length + 25), screen, (255, 0, 0))
     writestate1("汉界", (a + 5 * length + 50, a + 4 * length + 25), screen, (0, 0, 0))
@@ -350,7 +351,10 @@ def draw_aboard():
 
 
 def draw_chessonboard():
+    screen.fill([255,  255, 255])
+    #           time.sleep(1)
     draw_aboard()
+    #time.sleep(1)
     for chess in red_chess.keys():
         draw_chess(
             screen,
@@ -367,6 +371,36 @@ def draw_chessonboard():
             black_chess[chess]["coordinate"][0],
             black_chess[chess]["coordinate"][1],
         )
+    #pygame.display.flip()
+    #pygame.display.flip()
+    #pygame.display.update()
+    global position
+def draw_chessonboard_w(c1,c2,c3,c4):
+    #screen.fill([255,  255, 255])
+    #           time.sleep(1)
+    #draw_aboard()
+    #time.sleep(1)
+    for chess in red_chess.keys():
+        if chess == c3 or chess == c4:
+            draw_chess(
+                screen,
+                chess[0],
+                red_chess[chess]["color"],
+                red_chess[chess]["coordinate"][0],
+                red_chess[chess]["coordinate"][1],
+            )
+    for chess in black_chess.keys():
+        if chess == c1 or chess == c2:
+            draw_chess(
+                screen,
+                chess[0],
+                black_chess[chess]["color"],
+                black_chess[chess]["coordinate"][0],
+                black_chess[chess]["coordinate"][1],
+            )
+    #pygame.display.flip()
+    #pygame.display.flip()
+    #pygame.display.update()
     global position
 
 
@@ -381,7 +415,8 @@ def Draw_cir(x, y):
     pygame.draw.circle(screen, (205, 124, 71), (x, y), r - 3)
     pygame.draw.circle(screen, (0, 0, 0), (x, y), r - 5)
     pygame.draw.circle(screen, (198, 175, 125), (x, y), r - 6)
-    pygame.display.flip()
+    #pygame.display.update()
+    #pygame.display.flip()
 
 
 # draw_aboard()
@@ -399,7 +434,7 @@ def draw_chess(screen, chess, color, x, y):
     else:
         txt = Font_chess.render(chess, True, black_color)
     screen.blit(txt, (x - 15, y - 15))
-    pygame.display.update()
+    #pygame.display.update()
 
 
 def get_red_chess(pos):
@@ -407,7 +442,7 @@ def get_red_chess(pos):
         if red_chess[chess]["coordinate"] == pos:
             # print(chess)
             return chess
-
+    return None
 
 def get_black_chess(pos):
     global black_chess
@@ -415,7 +450,7 @@ def get_black_chess(pos):
         if black_chess[chess]["coordinate"] == pos:
             # print(chess)
             return chess
-
+    return None
 
 # 判断是否将军
 def to_win():
@@ -647,16 +682,20 @@ def move(p, s_pos, e_pos, chess):
         chess_1 = get_black_chess(e_pos)
         black_chess[chess_1]["coordinate"] = [-2, -2]
         if chess_1 == "将":
+            draw_chessonboard()
             writestate("红方胜利", w_pos, screen, (255, 0, 0))
-            sys.exit()
+            #pygame.display.update()
+            #draw_chessonboard()
+            #sys.exit()
     if p == 3:  # 黑方吃子
         black_chess[chess]["coordinate"] = e_pos
         chess_1 = get_red_chess(e_pos)
         red_chess[chess_1]["coordinate"] = [-2, -2]
         if chess_1 == "帅":
             writestate("黑方胜利", w_pos, screen, (0, 0, 0))
+            #pygame.display.update()
             draw_chessonboard()
-            sys.exit()
+            #ys.exit()
     position[e_pos[1]][e_pos[0]] = position[s_pos[1]][s_pos[0]]
     position[s_pos[1]][s_pos[0]] = 0
 
@@ -675,15 +714,14 @@ def way(people, s_pos, e_pos):
                     # print(s_pos, e_pos)
 
                     move(people, s_pos, e_pos, chess)
+                    return 1
                 else:
-                    global begin
-                    begin = not begin
-                    master = False
+                    return 0
+
                     # writestate("移动方式错误！",w_pos,screen,(255,0,0))
             else:
 
-                begin = not begin
-                master = False
+                return 0
                 # print("请选择正确的落子点")
                 # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "士":
@@ -694,17 +732,11 @@ def way(people, s_pos, e_pos):
 
                     # print(s_pos, e_pos)
                     move(people, s_pos, e_pos, chess)
-
+                    return 1
                 else:
-
-                    begin = not begin
-
-                    master = False
-                    # writestate("移动方式错误！",w_pos,screen,(255,0,0))
+                    return 0
             else:
-               # global begin
-                begin = not begin
-                # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
+                return 0
         if chess[0] == "相":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(0, 5):
                 if (
@@ -713,41 +745,32 @@ def way(people, s_pos, e_pos):
                     # print(s_pos, e_pos)
 
                     move(people, s_pos, e_pos, chess)
+                    return 1
                 else:
-                    #global begin
-                    master=False
-                    begin = not begin
-                    # print("移动方式错误：象眼！")
-                    # writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
+                    return 0
             else:
-                #global begin
-                master = False
-                begin = not begin
-                # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
+                return 0
         if chess[0] == "马":
             if abs(e_pos[0] - s_pos[0]) == 1 and abs(e_pos[1] - s_pos[1]) == 2:
                 if position[int((e_pos[1] + s_pos[1]) / 2)][s_pos[0]] == 0:
                     move(people, s_pos, e_pos, chess)
+                    return 1
                 else:
-                    #global begin
-                    master = False
-                    begin = not begin
+
                     print("2移动方式错误：别马脚！")
-                    # writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
+                    return 0
             elif abs(e_pos[0] - s_pos[0]) == 2 and abs(e_pos[1] - s_pos[1]) == 1:
                 if position[s_pos[1]][int((e_pos[0] + s_pos[0]) / 2)] == 0:
                     move(people, s_pos, e_pos, chess)
+                    return 1
                 else:
-                    #global begin
-                    begin = not begin
-                    master = False
+
                     print("1移动方式错误：别马脚！")
+                    return 0
                      #writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
             else:
-                #global begin
-                begin = not begin
-                master = False
                 print("3移动方式错误：别马脚！")
+                return 0
 
             # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "車":
@@ -786,12 +809,10 @@ def way(people, s_pos, e_pos):
                     # print("error5")
                     act = 0
             else:
-                #global begin
-
-                # print("请选择正确的落子点")
                 act = 0
             if act == 1:
                 move(people, s_pos, e_pos, chess)
+                return 1
             else:
                 #global begin
 
@@ -915,6 +936,7 @@ def way(people, s_pos, e_pos):
                     master = True
                     print("移动方式错误：兵")
                     print("error2!")
+
     if people == 1 or people == 3:  # 黑棋
         chess = get_black_chess(s_pos)
         if chess[0] == "将":
@@ -1146,6 +1168,11 @@ def way(people, s_pos, e_pos):
                     begin = not begin
                     master = True
                     print("请选择正确的落子点")
+    dec1=[1,1,1,1]
+    c1 = get_black_chess(s_pos)
+    c2 = get_black_chess(e_pos)
+    c3 = get_red_chess(s_pos)
+    c4 = get_red_chess(e_pos)
     draw_chessonboard()
 
 def chess_move(position_x, position_y):
@@ -1314,6 +1341,8 @@ def main():
     global red_chess
     global black_chess
     print("we")
+    global tan
+    tan = False
     red_chess = {
         "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
         "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
@@ -1570,6 +1599,7 @@ def main():
             "coordinate": [8, 6],
         },
     }
+    draw_aboard()
     draw_chessonboard()
 
     global position
@@ -1618,8 +1648,16 @@ def main():
     clock = pygame.time.Clock()
 
     while True:
+        i=0
         clock.tick(FPS)
-
+        if tan==False:
+            pygame.display.flip()
+            i = 0
+        else:
+            if i %2==0:
+                tan = False
+            else:
+                i = i +1
         for event in pygame.event.get():
             # print(pygame.event.__sizeof__())
             if event.type == QUIT:
@@ -1857,7 +1895,7 @@ def main():
                 #global position
                 # print(position)
 
-        screen.fill([255, 255, 255])
+        #screen.fill([255, 255, 255])
 
 
 if __name__ == "__main__":
