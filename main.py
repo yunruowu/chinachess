@@ -1,5 +1,5 @@
 from typing import Tuple
-
+import copy
 import pygame
 import pygame.font
 import sys
@@ -53,8 +53,9 @@ def writestate(str, set_pos, screen, color):
         ]
         pygame.draw.rect(screen, (255, 255, 255), my_rect, 0)
     screen.blit(text, pos)
-    pygame.display.update()
     #draw_chessonboard()
+    pygame.display.update()
+
 
 
 def writestate1(str, set_pos, screen, color):
@@ -67,8 +68,28 @@ def writestate1(str, set_pos, screen, color):
     pygame.display.update()
     screen.blit(text, pos)
     pygame.display.update()
-    # draw_chessonboard()
-
+    #draw_chessonboard()
+def deaw_feature(screen):
+    #print("dwsdsddddddd")
+    my_rect = [
+        a + 9 * length ,
+        a + 9 * length + 3,
+        2*length ,
+        length ,
+    ]
+    my_rect2 = [
+        a + 11 * length + 3,
+        a + 9 * length + 3,
+        2 * length ,
+        length ,
+    ]
+    pygame.draw.rect(screen, (0, 0, 0), my_rect, 1)
+    pygame.draw.rect(screen, (0, 0, 0), my_rect2, 1)
+    pos = [a+10*length,a+9.5*length]
+    pos1 = [a+12*length,a+9.5*length]
+    writestate1("悔棋",pos,screen,(200,100,50))
+    writestate1("新局", pos1, screen, (200, 100, 50))
+   # pygame.display.update()
 
 def draw_aboard():
     rec_length = 8 * length
@@ -320,10 +341,11 @@ def draw_aboard():
 
     writestate1("楚河", (a + length + 50, a + 4 * length + 25), screen, (255, 0, 0))
     writestate1("汉界", (a + 5 * length + 50, a + 4 * length + 25), screen, (0, 0, 0))
+    deaw_feature(screen)
     # writestate("汉界", (a + 11 * length, a + 2.75 * length), screen,(62, 61, 50))
     global hua
     if hua == 0:
-        writestate1("红方", p_pos, screen, (255, 0, 0))
+        writestate1("红方3", p_pos, screen, (255, 0, 0))
         hua = hua + 1
 
 
@@ -637,11 +659,12 @@ def move(p, s_pos, e_pos, chess):
             sys.exit()
     position[e_pos[1]][e_pos[0]] = position[s_pos[1]][s_pos[0]]
     position[s_pos[1]][s_pos[0]] = 0
-    draw_chessonboard()
+
     to_win()
 
 
 def way(people, s_pos, e_pos):
+    global master
     if people == 0 or people == 2:  # 红棋
         chess = get_red_chess(s_pos)
         if chess[0] == "帅":
@@ -655,10 +678,12 @@ def way(people, s_pos, e_pos):
                 else:
                     global begin
                     begin = not begin
+                    master = False
                     # writestate("移动方式错误！",w_pos,screen,(255,0,0))
             else:
 
                 begin = not begin
+                master = False
                 # print("请选择正确的落子点")
                 # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "士":
@@ -673,6 +698,8 @@ def way(people, s_pos, e_pos):
                 else:
 
                     begin = not begin
+
+                    master = False
                     # writestate("移动方式错误！",w_pos,screen,(255,0,0))
             else:
                # global begin
@@ -682,17 +709,19 @@ def way(people, s_pos, e_pos):
             if e_pos[0] in range(0, 9) and e_pos[1] in range(0, 5):
                 if (
                     abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
-                ) or (abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2):
+                ) and (position[int((e_pos[1] + s_pos[1]) / 2)][int((e_pos[0] + s_pos[0]) / 2)]==0):
                     # print(s_pos, e_pos)
 
                     move(people, s_pos, e_pos, chess)
                 else:
                     #global begin
+                    master=False
                     begin = not begin
                     # print("移动方式错误：象眼！")
                     # writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
             else:
                 #global begin
+                master = False
                 begin = not begin
                 # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "马":
@@ -701,8 +730,9 @@ def way(people, s_pos, e_pos):
                     move(people, s_pos, e_pos, chess)
                 else:
                     #global begin
+                    master = False
                     begin = not begin
-                    # print("移动方式错误：别马脚！")
+                    print("2移动方式错误：别马脚！")
                     # writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
             elif abs(e_pos[0] - s_pos[0]) == 2 and abs(e_pos[1] - s_pos[1]) == 1:
                 if position[s_pos[1]][int((e_pos[0] + s_pos[0]) / 2)] == 0:
@@ -710,11 +740,15 @@ def way(people, s_pos, e_pos):
                 else:
                     #global begin
                     begin = not begin
-                    # print("移动方式错误：别马脚！")
-                    # writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
+                    master = False
+                    print("1移动方式错误：别马脚！")
+                     #writestate("移动方式错误！", w_pos, screen, (255, 0, 0))
             else:
                 #global begin
                 begin = not begin
+                master = False
+                print("3移动方式错误：别马脚！")
+
             # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "車":
             act = 1
@@ -753,14 +787,16 @@ def way(people, s_pos, e_pos):
                     act = 0
             else:
                 #global begin
-                begin = not begin
+
                 # print("请选择正确的落子点")
                 act = 0
             if act == 1:
                 move(people, s_pos, e_pos, chess)
             else:
                 #global begin
+
                 begin = not begin
+                master = False
                 # print("移动方式错误：车中间有子")
                 pass
         if chess[0] == "炮":
@@ -846,13 +882,14 @@ def way(people, s_pos, e_pos):
                         act = 0
                 else:
                     #global begin
-                    begin = not begin
+
                     print("请选择正确的落子点")
                     act = 0
                 if act == 1:
                     move(people, s_pos, e_pos, chess)
                 else:
                    # global begin
+                    master = False
                     begin = not begin
                     print("吃子方式错误：炮吃子")
                     pass
@@ -864,6 +901,7 @@ def way(people, s_pos, e_pos):
                 else:
                     #global begin
                     begin = not begin
+                    master =True
                     print("移动方式错误：兵")
                     print("error1!")
             else:
@@ -874,6 +912,7 @@ def way(people, s_pos, e_pos):
                 else:
                     #global begin
                     begin = not begin
+                    master = True
                     print("移动方式错误：兵")
                     print("error2!")
     if people == 1 or people == 3:  # 黑棋
@@ -889,10 +928,12 @@ def way(people, s_pos, e_pos):
                 else:
                     #global begin
                     begin = not begin
+                    master = True
                     print("移动方式错误！")
             else:
                 #global begin
                 begin = not begin
+                master = True
                 print("请选择正确的落子点")
         if chess[0] == "仕":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
@@ -906,26 +947,30 @@ def way(people, s_pos, e_pos):
                 else:
                     #global begin
                     begin = not begin
+                    master = True
                     print("移动方式错误！")
             else:
                 #global begin
                 begin = not begin
+                master = True
                 print("请选择正确的落子点")
         if chess[0] == "象":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(5, 10):
                 if (
                     abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
-                ) or (abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2):
+                ) and( position[int((e_pos[1] + s_pos[1]) / 2)][int((e_pos[0] + s_pos[0]) / 2)]==0):
                     print(s_pos, e_pos)
 
                     move(people, s_pos, e_pos, chess)
                 else:
                    # global begin
                     begin = not begin
+                    master = True
                     print("移动方式错误！：象眼")
             else:
                 #global begin
                 begin = not begin
+                master = True
                 print("请选择正确的落子点")
         if chess[0] == "马":
             if abs(e_pos[0] - s_pos[0]) == 1 and abs(e_pos[1] - s_pos[1]) == 2:
@@ -933,6 +978,7 @@ def way(people, s_pos, e_pos):
                     move(people, s_pos, e_pos, chess)
                 else:
                     #global begin
+                    master = True
                     begin = not begin
                     print("移动方式错误！：马脚   ")
             elif abs(e_pos[0] - s_pos[0]) == 2 and abs(e_pos[1] - s_pos[1]) == 1:
@@ -940,13 +986,14 @@ def way(people, s_pos, e_pos):
                     move(people, s_pos, e_pos, chess)
                 else:
                     #global begin
-                    begin = not begin
+                    master = True
                     #global begin
                     begin = not begin
                     print("移动方式错误！：马脚")
             else:
                 #global begin
                 begin = not begin
+                master = True
                 print("请选择正确的落子点")
         if chess[0] == "車":
             act = 1
@@ -985,12 +1032,14 @@ def way(people, s_pos, e_pos):
                     act = 0
             else:
                # global begin
-                begin = not begin
+
                 print("请选择正确的落子点")
                 act = 0
             if act == 1:
                 move(people, s_pos, e_pos, chess)
             else:
+                master = True
+                begin = not begin
                 pass
         if chess[0] == "炮":
             if people == 1:
@@ -1034,6 +1083,8 @@ def way(people, s_pos, e_pos):
                 if act == 1:
                     move(people, s_pos, e_pos, chess)
                 else:
+                    begin = not begin
+                    master = True
                     pass
             else:
                 act = 0
@@ -1065,6 +1116,7 @@ def way(people, s_pos, e_pos):
                         # move(s_pos, e_pos,chess)
                     if s_pos[0] == e_pos[0]:
                         print("error5")
+
                         act = 0
                 else:
                     print("error6")
@@ -1072,6 +1124,8 @@ def way(people, s_pos, e_pos):
                 if act == 1:
                     move(people, s_pos, e_pos, chess)
                 else:
+                    master = True
+                    begin = not begin
                     pass
         if chess[0] == "卒":
             if s_pos[1] > 4:
@@ -1080,6 +1134,7 @@ def way(people, s_pos, e_pos):
                 else:
                    # global begin
                     begin = not begin
+                    master = True
                     print("请选择正确的落子点")
             else:
                 if ((s_pos[0] == e_pos[0]) and (e_pos[1] - s_pos[1] == -1)) or (
@@ -1089,14 +1144,15 @@ def way(people, s_pos, e_pos):
                 else:
                    # global begin
                     begin = not begin
+                    master = True
                     print("请选择正确的落子点")
+    draw_chessonboard()
 
-
-def chess_move():
+def chess_move(position_x, position_y):
     global begin
     global master,start_pos
     if begin == True:  # 选择第一个棋子
-        position_x, position_y = pygame.mouse.get_pos()
+        #position_x, position_y = pygame.mouse.get_pos()
         # 鼠标点击的位置在棋盘内
         if (
             (position_x < a + 8 * length + length / 2)
@@ -1138,7 +1194,7 @@ def chess_move():
 
         # 终点
     else:  # 选择落子的位置
-        position_x, position_y = pygame.mouse.get_pos()
+        #position_x, position_y = pygame.mouse.get_pos()
         if (
             (position_x < a + 8 * length + length / 2)
             and (position_y < a + 9 * length + length / 2)
@@ -1150,7 +1206,7 @@ def chess_move():
             print(x, y)
             end_pos = [x, y]
             begin = not begin
-            print(begin)
+            #print(begin)
             # print("dsd")
             # 由于master已经修改，所以此时的master为相反的
             if position[y][x] == 0:  # 位置为空,移动
@@ -1159,20 +1215,27 @@ def chess_move():
                     # writestate1("红方", p_pos, screen, (255, 0, 0))
                     way(0, start_pos, end_pos)
                     print("h1y")
+                    print(master)
                     # writestate1("红方", p_pos, screen, (255, 255, 255))
-
-                    writestate("黑方", p_pos, screen, (0, 0, 0))
+                    if master == False:
+                        writestate("黑方3", p_pos, screen, (0, 0, 0))
+                    else:
+                        writestate("红方10", p_pos, screen, (255, 0, 0))
                 else:  # 黑
                     # writestate1("黑方", p_pos, screen, (0, 0, 0))
                     way(1, start_pos, end_pos)
-                    print("h2y")
-                    writestate1("红方", p_pos, screen, (255, 0, 0))
+                    if master == False:
+                        writestate("黑方33", p_pos, screen, (0, 0, 0))
+                    else:
+                        writestate("红方20", p_pos, screen, (255, 0, 0))
 
             else:
                 if master == False and position[y][x] > 7:  # 红棋吃子
                     way(2, start_pos, end_pos)
-                    writestate("黑方", p_pos, screen, (0, 0, 0))
-                    print("h1xc")
+                    if master == False:
+                        writestate("黑方23", p_pos, screen, (0, 0, 0))
+                    else:
+                        writestate("红方30", p_pos, screen, (255, 0, 0))
                 elif master == False and position[y][x] < 8:  # 红棋连续点了两次
                     print("重新选择红棋")
                     begin = True
@@ -1180,8 +1243,10 @@ def chess_move():
                 else:
                     if master == True and position[y][x] < 8:  # 黑旗吃子
                         way(3, start_pos, end_pos)
-                        writestate1("红方", p_pos, screen, (255, 0, 0))
-                        print("h2w")
+                        if master == False:
+                            writestate("黑方13", p_pos, screen, (0, 0, 0))
+                        else:
+                            writestate("红方40", p_pos, screen, (255, 0, 0))
                     else:
                         print("重新选择红棋")
                         begin = True
@@ -1377,6 +1442,134 @@ def main():
             "coordinate": [8, 6],
         },
     }
+    red_chess_r = {
+        "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
+        "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
+        "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
+        "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
+        "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
+        "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
+        "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
+        "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
+        "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
+        "炮1": {
+            "color": "red",
+            "position": [a + 1 * length, a + 2 * length],
+            "coordinate": [1, 2],
+        },
+        "炮2": {
+            "color": "red",
+            "position": [a + 7 * length, a + 2 * length],
+            "coordinate": [7, 2],
+        },
+        "兵1": {
+            "color": "red",
+            "position": [a + 0 * length, a + 3 * length],
+            "coordinate": [0, 3],
+        },
+        "兵2": {
+            "color": "red",
+            "position": [a + 2 * length, a + 3 * length],
+            "coordinate": [2, 3],
+        },
+        "兵3": {
+            "color": "red",
+            "position": [a + 4 * length, a + 3 * length],
+            "coordinate": [4, 3],
+        },
+        "兵4": {
+            "color": "red",
+            "position": [a + 6 * length, a + 3 * length],
+            "coordinate": [6, 3],
+        },
+        "兵5": {
+            "color": "red",
+            "position": [a + 8 * length, a + 3 * length],
+            "coordinate": [8, 3],
+        },
+    }
+    black_chess_r = {
+        "将": {
+            "color": "black",
+            "position": [a + 4 * length, a + 9 * length],
+            "coordinate": [4, 9],
+        },
+        "仕1": {
+            "color": "black",
+            "position": [a + 3 * length, a + 9 * length],
+            "coordinate": [3, 9],
+        },
+        "仕2": {
+            "color": "black",
+            "position": [a + 5 * length, a + 9 * length],
+            "coordinate": [5, 9],
+        },
+        "象1": {
+            "color": "black",
+            "position": [a + 2 * length, a + 9 * length],
+            "coordinate": [2, 9],
+        },
+        "象2": {
+            "color": "black",
+            "position": [a + 6 * length, a + 9 * length],
+            "coordinate": [6, 9],
+        },
+        "马1": {
+            "color": "black",
+            "position": [a + 1 * length, a + 9 * length],
+            "coordinate": [1, 9],
+        },
+        "马2": {
+            "color": "black",
+            "position": [a + 7 * length, a + 9 * length],
+            "coordinate": [7, 9],
+        },
+        "車1": {
+            "color": "black",
+            "position": [a + 0 * length, a + 9 * length],
+            "coordinate": [0, 9],
+        },
+        "車2": {
+            "color": "black",
+            "position": [a + 8 * length, a + 9 * length],
+            "coordinate": [8, 9],
+        },
+        "炮1": {
+            "color": "black",
+            "position": [a + 1 * length, a + 7 * length],
+            "coordinate": [1, 7],
+        },
+        "炮2": {
+            "color": "black",
+            "position": [a + 7 * length, a + 7 * length],
+            "coordinate": [7, 7],
+        },
+        "卒1": {
+            "color": "black",
+            "position": [a + 0 * length, a + 6 * length],
+            "coordinate": [0, 6],
+        },
+        "卒2": {
+            "color": "black",
+            "position": [a + 2 * length, a + 6 * length],
+            "coordinate": [2, 6],
+        },
+        "卒3": {
+            "color": "black",
+            "position": [a + 4 * length, a + 6 * length],
+            "coordinate": [4, 6],
+        },
+        "卒4": {
+            "color": "black",
+            "position": [a + 6 * length, a + 6 * length],
+            "coordinate": [6, 6],
+        },
+        "卒5": {
+            "color": "black",
+            "position": [a + 8 * length, a + 6 * length],
+            "coordinate": [8, 6],
+        },
+    }
     draw_chessonboard()
 
     global position
@@ -1392,7 +1585,19 @@ def main():
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [12, 11, 10, 9, 8, 9, 10, 11, 12],
     ]
-
+    #position_r = copy.deepcopy(position)
+    position_r = [
+        [5, 4, 3, 2, 1, 2, 3, 4, 5],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 6, 0, 0, 0, 0, 0, 6, 0],
+        [7, 0, 7, 0, 7, 0, 7, 0, 7],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [14, 0, 14, 0, 14, 0, 14, 0, 14],
+        [0, 13, 0, 0, 0, 0, 0, 13, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [12, 11, 10, 9, 8, 9, 10, 11, 12],
+    ]
     global begin, master
     begin = True
     master = True
@@ -1402,9 +1607,18 @@ def main():
     start_pos = (0, 0)
     end_pos = (0, 0)
     chess = 0
-    who = 0
+    global huinum
+    huinum = 0
     # writestate1("红方", p_pos, screen, (255, 0, 0))
+    global position_r1,red_chess_r1,black_chess_r1
+    global position_r2, red_chess_r2, black_chess_r2
+    red_chess_r2 = red_chess
+    red_chess_r1 = red_chess
+    FPS = 30
+    clock = pygame.time.Clock()
+
     while True:
+        clock.tick(FPS)
 
         for event in pygame.event.get():
             # print(pygame.event.__sizeof__())
@@ -1412,7 +1626,234 @@ def main():
                 sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
-                chess_move()
+                pos_x,pos_y = pygame.mouse.get_pos()
+                if pos_x>a+9*length-3 and pos_x<a+11*length and pos_y>a+9*length and pos_y<a+10*length:#悔棋
+                    if (huinum % 2 == 1):
+                        red_chess = red_chess_r1
+                        black_chess = black_chess_r1
+                        position = position_r1
+
+                        draw_chessonboard()
+                        master = not master
+                    else:
+                        red_chess = red_chess_r2
+                        black_chess = black_chess_r2
+                        position = position_r2
+                        draw_chessonboard()
+                        master = not master
+                    if master == True:
+                        writestate("红方-1", p_pos, screen, (255, 0, 0))
+                    else:
+                        writestate("黑方1", p_pos, screen, (0, 0, 0))
+                if pos_x>a+11*length+3 and pos_x<a+13*length+6 and pos_y>a+9*length and pos_y<a+10*length:#新局
+                    red_chess = {
+        "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
+        "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
+        "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
+        "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
+        "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
+        "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
+        "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
+        "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
+        "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
+        "炮1": {
+            "color": "red",
+            "position": [a + 1 * length, a + 2 * length],
+            "coordinate": [1, 2],
+        },
+        "炮2": {
+            "color": "red",
+            "position": [a + 7 * length, a + 2 * length],
+            "coordinate": [7, 2],
+        },
+        "兵1": {
+            "color": "red",
+            "position": [a + 0 * length, a + 3 * length],
+            "coordinate": [0, 3],
+        },
+        "兵2": {
+            "color": "red",
+            "position": [a + 2 * length, a + 3 * length],
+            "coordinate": [2, 3],
+        },
+        "兵3": {
+            "color": "red",
+            "position": [a + 4 * length, a + 3 * length],
+            "coordinate": [4, 3],
+        },
+        "兵4": {
+            "color": "red",
+            "position": [a + 6 * length, a + 3 * length],
+            "coordinate": [6, 3],
+        },
+        "兵5": {
+            "color": "red",
+            "position": [a + 8 * length, a + 3 * length],
+            "coordinate": [8, 3],
+        },
+    }
+                    black_chess = {
+        "将": {
+            "color": "black",
+            "position": [a + 4 * length, a + 9 * length],
+            "coordinate": [4, 9],
+        },
+        "仕1": {
+            "color": "black",
+            "position": [a + 3 * length, a + 9 * length],
+            "coordinate": [3, 9],
+        },
+        "仕2": {
+            "color": "black",
+            "position": [a + 5 * length, a + 9 * length],
+            "coordinate": [5, 9],
+        },
+        "象1": {
+            "color": "black",
+            "position": [a + 2 * length, a + 9 * length],
+            "coordinate": [2, 9],
+        },
+        "象2": {
+            "color": "black",
+            "position": [a + 6 * length, a + 9 * length],
+            "coordinate": [6, 9],
+        },
+        "马1": {
+            "color": "black",
+            "position": [a + 1 * length, a + 9 * length],
+            "coordinate": [1, 9],
+        },
+        "马2": {
+            "color": "black",
+            "position": [a + 7 * length, a + 9 * length],
+            "coordinate": [7, 9],
+        },
+        "車1": {
+            "color": "black",
+            "position": [a + 0 * length, a + 9 * length],
+            "coordinate": [0, 9],
+        },
+        "車2": {
+            "color": "black",
+            "position": [a + 8 * length, a + 9 * length],
+            "coordinate": [8, 9],
+        },
+        "炮1": {
+            "color": "black",
+            "position": [a + 1 * length, a + 7 * length],
+            "coordinate": [1, 7],
+        },
+        "炮2": {
+            "color": "black",
+            "position": [a + 7 * length, a + 7 * length],
+            "coordinate": [7, 7],
+        },
+        "卒1": {
+            "color": "black",
+            "position": [a + 0 * length, a + 6 * length],
+            "coordinate": [0, 6],
+        },
+        "卒2": {
+            "color": "black",
+            "position": [a + 2 * length, a + 6 * length],
+            "coordinate": [2, 6],
+        },
+        "卒3": {
+            "color": "black",
+            "position": [a + 4 * length, a + 6 * length],
+            "coordinate": [4, 6],
+        },
+        "卒4": {
+            "color": "black",
+            "position": [a + 6 * length, a + 6 * length],
+            "coordinate": [6, 6],
+        },
+        "卒5": {
+            "color": "black",
+            "position": [a + 8 * length, a + 6 * length],
+            "coordinate": [8, 6],
+        },
+    }
+                    position = [
+        [5, 4, 3, 2, 1, 2, 3, 4, 5],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 6, 0, 0, 0, 0, 0, 6, 0],
+        [7, 0, 7, 0, 7, 0, 7, 0, 7],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [14, 0, 14, 0, 14, 0, 14, 0, 14],
+        [0, 13, 0, 0, 0, 0, 0, 13, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [12, 11, 10, 9, 8, 9, 10, 11, 12],
+    ]
+                    if (red_chess != {
+        "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
+        "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
+        "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
+        "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
+        "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
+        "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
+        "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
+        "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
+        "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
+        "炮1": {
+            "color": "red",
+            "position": [a + 1 * length, a + 2 * length],
+            "coordinate": [1, 2],
+        },
+        "炮2": {
+            "color": "red",
+            "position": [a + 7 * length, a + 2 * length],
+            "coordinate": [7, 2],
+        },
+        "兵1": {
+            "color": "red",
+            "position": [a + 0 * length, a + 3 * length],
+            "coordinate": [0, 3],
+        },
+        "兵2": {
+            "color": "red",
+            "position": [a + 2 * length, a + 3 * length],
+            "coordinate": [2, 3],
+        },
+        "兵3": {
+            "color": "red",
+            "position": [a + 4 * length, a + 3 * length],
+            "coordinate": [4, 3],
+        },
+        "兵4": {
+            "color": "red",
+            "position": [a + 6 * length, a + 3 * length],
+            "coordinate": [6, 3],
+        },
+        "兵5": {
+            "color": "red",
+            "position": [a + 8 * length, a + 3 * length],
+            "coordinate": [8, 3],
+        },
+    }):
+                        print(red_chess)
+                        exit()
+                    begin  = True
+                    master = True
+                    writestate("红方2", p_pos, screen, (255, 0, 0))
+                    draw_chessonboard()
+                else:
+                    chess_move(pos_x,pos_y)
+                    if(huinum %2==1):
+                        position_r1 = copy.deepcopy( position)
+                        red_chess_r1 = copy.deepcopy( red_chess)
+                        black_chess_r1 = copy.deepcopy(black_chess)
+
+                        huinum = huinum + 1
+                    else:
+                        position_r2 = copy.deepcopy( position)
+                        red_chess_r2 = copy.deepcopy(red_chess)
+                        black_chess_r2 = copy.deepcopy(black_chess)
+
+                        huinum = huinum + 1
+                    #print(red_chess_r1)
+                    #print(red_chess_r2)
                 #global position
                 # print(position)
 
