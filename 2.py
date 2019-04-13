@@ -1439,6 +1439,7 @@ def main():
             if event.type == MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
                 if (
+
                     pos_x > a + 9 * length - 3
                     and pos_x < a + 11 * length
                     and pos_y > a + 9 * length
