@@ -5,7 +5,11 @@ import pygame.font
 import sys
 import traceback
 from pygame.locals import *
+from _thread import *
 import time
+from threading import Thread, Lock
+
+from Client import *
 
 pygame.font.init()
 pygame.init()
@@ -33,6 +37,7 @@ hua = 0
 global out
 out = 0
 
+
 def writestate(str, set_pos, screen, color):
     tan = True
     Font = pygame.font.SysFont("SimHei", 32)
@@ -57,11 +62,10 @@ def writestate(str, set_pos, screen, color):
         pygame.draw.rect(screen, (255, 255, 255), my_rect, 0)
     screen.blit(text, pos)
     # draw_chessonboard()
-    #pygame.display.update()
+    # pygame.display.update()
 
 
 def writestate1(str, set_pos, screen, color):
-
     Font = pygame.font.SysFont("SimHei", 32)
     text = Font.render(str, True, color)
     pos = text.get_rect()
@@ -348,16 +352,16 @@ def draw_aboard():
 
 
 def draw_chessonboard():
-    global r_out,hua
+    global r_out, hua
     print(hua)
     screen.fill([255, 255, 255])
     if out == 6:
         writestate("黑方胜利", w_pos, screen, (0, 0, 0))
-    if out ==7:
+    if out == 7:
         writestate("红方胜利", w_pos, screen, (255, 0, 0))
     if out == 0:
         print("122233333333333333333333")
-        if hua !=1:
+        if hua != 1:
             print(hua)
             writestate("", w_pos, screen, (255, 255, 255))
             print("122233sdffffffffff33333333333")
@@ -520,7 +524,7 @@ def to_win():
         else:
             if chess[0] == "兵":
                 if (abs(pos[0] - pos_jiang[0]) == 1 and pos[1] == pos_jiang[1]) or (
-                    pos_jiang[1] - pos[1] == 1 and pos[0] == pos_jiang[0]
+                        pos_jiang[1] - pos[1] == 1 and pos[0] == pos_jiang[0]
                 ):
                     writestate("红方将军", w_pos, screen, (255, 0, 0))
                     out = 4
@@ -619,7 +623,7 @@ def to_win():
         else:
             if chess[0] == "卒":
                 if (abs(pos[0] - pos_shuai[0]) == 1 and pos[1] == pos_shuai[1]) or (
-                    pos_shuai[1] - pos[1] == -1 and pos[0] == pos_shuai[0]
+                        pos_shuai[1] - pos[1] == -1 and pos[0] == pos_shuai[0]
                 ):
                     writestate("黑方将军", w_pos, screen, (0, 0, 0))
                     out = 3
@@ -721,7 +725,7 @@ def move(p, s_pos, e_pos, chess):
         chess_1 = get_black_chess(e_pos)
         black_chess[chess_1]["coordinate"] = [-2, -2]
         if chess_1 == "将":
-            #draw_chessonboard()
+            # draw_chessonboard()
             writestate("红方胜利", w_pos, screen, (255, 0, 0))
             out = 7
             # pygame.display.update()
@@ -735,7 +739,7 @@ def move(p, s_pos, e_pos, chess):
             writestate("黑方胜利", w_pos, screen, (0, 0, 0))
             # pygame.display.update()
             out = 6
-            #draw_chessonboard()
+            # draw_chessonboard()
             # ys.exit()
     position[e_pos[1]][e_pos[0]] = position[s_pos[1]][s_pos[0]]
     position[s_pos[1]][s_pos[0]] = 0
@@ -750,7 +754,7 @@ def way(people, s_pos, e_pos):
         if chess[0] == "帅":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
                 ) or (abs(s_pos[0] - e_pos[0]) == 0 and abs(s_pos[1] - e_pos[1]) == 1):
                     # print(s_pos, e_pos)
 
@@ -768,7 +772,7 @@ def way(people, s_pos, e_pos):
         if chess[0] == "士":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
                 ) or (abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1):
 
                     # print(s_pos, e_pos)
@@ -781,12 +785,12 @@ def way(people, s_pos, e_pos):
         if chess[0] == "相":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(0, 5):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
+                        abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
                 ) and (
-                    position[int((e_pos[1] + s_pos[1]) / 2)][
-                        int((e_pos[0] + s_pos[0]) / 2)
-                    ]
-                    == 0
+                        position[int((e_pos[1] + s_pos[1]) / 2)][
+                            int((e_pos[0] + s_pos[0]) / 2)
+                        ]
+                        == 0
                 ):
                     # print(s_pos, e_pos)
 
@@ -961,7 +965,7 @@ def way(people, s_pos, e_pos):
                     return 0
             else:
                 if ((s_pos[0] == e_pos[0]) and (e_pos[1] - s_pos[1] == 1)) or (
-                    (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
+                        (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
                 ):
                     move(people, s_pos, e_pos, chess)
                     return 1
@@ -973,7 +977,7 @@ def way(people, s_pos, e_pos):
         if chess[0] == "将":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
                 ) or (abs(s_pos[0] - e_pos[0]) == 0 and abs(s_pos[1] - e_pos[1]) == 1):
                     print(s_pos, e_pos)
 
@@ -986,7 +990,7 @@ def way(people, s_pos, e_pos):
         if chess[0] == "仕":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
                 ) or (abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1):
 
                     print(s_pos, e_pos)
@@ -999,8 +1003,13 @@ def way(people, s_pos, e_pos):
         if chess[0] == "象":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(5, 10):
                 if (
-                    abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
-                ) and (position[int((e_pos[1] + s_pos[1]) / 2)][int((e_pos[0] + s_pos[0]) / 2)]== 0):
+                        abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
+                ) and (
+                        position[int((e_pos[1] + s_pos[1]) / 2)][
+                            int((e_pos[0] + s_pos[0]) / 2)
+                        ]
+                        == 0
+                ):
                     print(s_pos, e_pos)
 
                     move(people, s_pos, e_pos, chess)
@@ -1162,7 +1171,7 @@ def way(people, s_pos, e_pos):
                     return 0
             else:
                 if ((s_pos[0] == e_pos[0]) and (e_pos[1] - s_pos[1] == -1)) or (
-                    (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
+                        (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
                 ):
                     move(people, s_pos, e_pos, chess)
                     return 1
@@ -1175,7 +1184,6 @@ def way(people, s_pos, e_pos):
     c4 = get_red_chess(e_pos)
 
 
-
 def chess_move(position_x, position_y):
     global begin
     global master, start_pos
@@ -1183,10 +1191,10 @@ def chess_move(position_x, position_y):
         # position_x, position_y = pygame.mouse.get_pos()
         # 鼠标点击的位置在棋盘内
         if (
-            (position_x < a + 8 * length + length / 2)
-            and (position_y < a + 9 * length + length / 2)
-            and (position_x > a - length / 2)
-            and (position_y > a - length / 2)
+                (position_x < a + 8 * length + length / 2)
+                and (position_y < a + 9 * length + length / 2)
+                and (position_x > a - length / 2)
+                and (position_y > a - length / 2)
         ):
             x = int((position_x - a + length / 2) / length)
             y = int((position_y - a + length / 2) / length)
@@ -1196,7 +1204,7 @@ def chess_move(position_x, position_y):
                 if position[y][x] == 0 or position[y][x] > 7:  # 选择了红棋
                     print("请选择一个红方棋子！！！")
                     master = True
-                    #begin = not begin
+                    # begin = not begin
                 else:
                     chess = position[y][x]
                     master = not master
@@ -1208,7 +1216,7 @@ def chess_move(position_x, position_y):
                     # writestate("黑方", p_pos, screen, (0, 0, 0))
                     print("请选择一个黑方棋子！！！")
                     master = False
-                   # begin = not begin
+                # begin = not begin
                 else:
                     chess = position[y][x]
                     master = not master
@@ -1216,7 +1224,7 @@ def chess_move(position_x, position_y):
                     begin = not begin
 
             # 选在落点
-            #begin = not begin
+            # begin = not begin
 
         else:
             print("请选择正确的位置！！！")
@@ -1227,16 +1235,16 @@ def chess_move(position_x, position_y):
     else:  # 选择落子的位置
         # position_x, position_y = pygame.mouse.get_pos()
         if (
-            (position_x < a + 8 * length + length / 2)
-            and (position_y < a + 9 * length + length / 2)
-            and (position_x > a - length / 2)
-            and (position_y > a - length / 2)
+                (position_x < a + 8 * length + length / 2)
+                and (position_y < a + 9 * length + length / 2)
+                and (position_x > a - length / 2)
+                and (position_y > a - length / 2)
         ):
             x = int((position_x - a + length / 2) / length)
             y = int((position_y - a + length / 2) / length)
             print(x, y)
             end_pos = [x, y]
-           # begin = not begin
+            # begin = not begin
             # print(begin)
             # print("dsd")
             # 由于master已经修改，所以此时的master为相反的
@@ -1249,7 +1257,7 @@ def chess_move(position_x, position_y):
                     print("h1y")
                     print(master)
                     # writestate1("红方", p_pos, screen, (255, 255, 255))
-                    if m ==1:
+                    if m == 1:
                         begin = True
                         writestate("黑方", p_pos, screen, (0, 0, 0))
                     else:
@@ -1279,7 +1287,6 @@ def chess_move(position_x, position_y):
                     master = False
                     start_pos = end_pos
 
-
                 else:
                     if master == True and position[y][x] < 8:  # 黑旗吃子
                         m = way(3, start_pos, end_pos)
@@ -1287,7 +1294,7 @@ def chess_move(position_x, position_y):
                         if m == 0:
                             writestate("黑方", p_pos, screen, (0, 0, 0))
                         else:
-                            begin=True
+                            begin = True
                             writestate("红方", p_pos, screen, (255, 0, 0))
                     else:
                         print("重新选择黑棋")
@@ -1298,6 +1305,8 @@ def chess_move(position_x, position_y):
             print("请选择正确的位置！！！")
             begin = False
             pass
+
+
 def main():
     global red_chess
     global black_chess
@@ -1591,9 +1600,14 @@ def main():
     ]
     global begin, master
     global r_out
-    r_out=0
+    r_out = 0
     begin = True
-    master = True
+    while side == -1:
+        pass
+    if side == 1:
+        master = False
+    if side == 0:
+        master == True
     global start_pos
     global end_pos
     global chess
@@ -1632,10 +1646,10 @@ def main():
             if event.type == MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
                 if (
-                    pos_x > a + 9 * length - 3
-                    and pos_x < a + 11 * length
-                    and pos_y > a + 9 * length
-                    and pos_y < a + 10 * length
+                        pos_x > a + 9 * length - 3
+                        and pos_x < a + 11 * length
+                        and pos_y > a + 9 * length
+                        and pos_y < a + 10 * length
                 ):  # 悔棋
                     out = r_out
                     if huinum % 2 == 1:
@@ -1657,10 +1671,10 @@ def main():
                     else:
                         writestate("黑方", p_pos, screen, (0, 0, 0))
                 if (
-                    pos_x > a + 11 * length + 3
-                    and pos_x < a + 13 * length + 6
-                    and pos_y > a + 9 * length
-                    and pos_y < a + 10 * length
+                        pos_x > a + 11 * length + 3
+                        and pos_x < a + 13 * length + 6
+                        and pos_y > a + 9 * length
+                        and pos_y < a + 10 * length
                 ):  # 新局
                     red_chess = {
                         "帅": {
@@ -1927,7 +1941,7 @@ def main():
                     draw_chessonboard()
                     writestate("红方", p_pos, screen, (255, 0, 0))
                     out = 5
-                    #draw_chessonboard()
+                    # draw_chessonboard()
                 else:
                     chess_move(pos_x, pos_y)
                     if huinum % 2 == 1:
@@ -1953,6 +1967,7 @@ def main():
 if __name__ == "__main__":
     try:
         # writestate1("红方", p_pos, screen, (255, 0, 0))
+        #start_new_thread( recvie() )
         main()
     except SystemExit:
         pass
