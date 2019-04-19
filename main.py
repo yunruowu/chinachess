@@ -9,7 +9,150 @@ from _thread import *
 import time
 from threading import Thread, Lock
 
-from Client import *
+import socket
+import sys
+import json
+import uuid
+import time
+from threading import Lock
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(('127.0.0.1', 50005))
+side = -1
+game_id = ''
+mutex = Lock()
+
+
+#改变坐标
+def change_xy_p(x):
+    global a,length
+    return a+x*length
+
+
+
+
+msg = \
+    {"type": 0,
+     "msg": {
+         "name": "小明"
+     }
+     }
+packet = json.dumps(msg)
+packet = packet.encode('utf-8')
+client.send(packet)
+
+
+def connect_ser(
+        msg = \
+                {"type": 0,
+                 "msg": {
+                     "name": "小明"
+                 }
+        }
+):
+    packet = json.dumps(msg)
+    packet = packet.encode('utf-8')
+    client.send(packet)
+
+def send_msg():
+    global sent_msg_toS
+    print("sss")
+    global send_end_pos,send_start_pos,game_id
+    print(game_id)
+    print(send_start_pos,send_end_pos)
+    msg = {
+        "type": 1,
+        "msg": {
+            "game_id": game_id,
+            "side": side,
+            "src": {
+                "x": send_start_pos[0],
+                "y": send_start_pos[1],
+            },
+            "dst": {
+                "x": send_end_pos[0],
+                "y": send_end_pos[1],
+            }
+        }
+    }
+    connect_ser(msg)
+    #sent_msg_toS = not sent_msg_toS
+
+def deal(data):
+    global game_id,begin
+
+    game_id = data['game_id']
+    side = data['side']
+    src = [0, 0]
+    src[0] = data['src']['x']
+    src[1] = data['src']['y']
+    dst = [0, 0]
+    dst[0] = data['dst']['x']
+    dst[1] = data['dst']['y']
+    chess_move(change_xy_p(src[0]),change_xy_p(src[1]))
+    begin = False
+    chess_move(change_xy_p(dst[0]),change_xy_p(dst[1]))
+    begin = True
+    print(dst,src)
+
+
+def re_ask():
+    print("请求超时！请重连。")
+    print("是否重连？y/n")
+    str = input("请输入：")
+    if str[1] == 'y':
+        print("正在重连。。。")
+        connect_ser()
+    else:
+        exit()
+
+
+def match_success(data):
+    print("匹配成功！")
+    global side
+    if data['status']==1:
+        global game_id
+        counterpart_name = data['counterpart_name']
+        print(counterpart_name)
+        game_id = data['game_id']
+        mutex.acquire()
+        side = data['side']
+        mutex.release()
+    else:
+        print("error")
+    if side == 0:#我方先手
+        print("move")
+        #send_msg()
+
+    else:#对方先手，等待消息
+        pass
+    print(side)
+def win():
+    msg = {
+        "type":3
+    }
+    connect_ser(msg)
+    pass
+
+def recvie(src=None,dic=None):
+    global side
+    data = client.recv(1024)
+    print("ahhhhhhhh")
+
+    if not data:
+        print("error!")
+    print(data)
+    data = json.loads(data)
+    if not 'status' in data:  # 收到对方的棋子
+        deal(data)
+    elif data['status'] == 0:
+        re_ask()
+    elif data['status'] == 1:
+        # 匹配成功
+        match_success(data)
+    elif data['status'] == 2:
+        # 对方认输
+        win()
+
 
 pygame.font.init()
 pygame.init()
@@ -37,6 +180,15 @@ hua = 0
 global out
 out = 0
 
+#为了全局
+begin = True
+master = True
+
+
+#是否向服务器发信息
+sent_msg_toS = False
+send_start_pos=[0,0]
+send_end_pos = [0,0]
 
 def writestate(str, set_pos, screen, color):
     tan = True
@@ -715,7 +867,7 @@ def to_win():
 
 
 def move(p, s_pos, e_pos, chess):
-    global out
+    global out,sent_msg_toS,send_end_pos,send_start_pos
     if p == 0:  # 红移动
         red_chess[chess]["coordinate"] = e_pos
     if p == 1:  # 黑移动
@@ -745,6 +897,12 @@ def move(p, s_pos, e_pos, chess):
     position[s_pos[1]][s_pos[0]] = 0
 
     to_win()
+    sent_msg_toS = not sent_msg_toS
+    print("SMWE")
+    print(sent_msg_toS)
+    print(sent_msg_toS)
+    send_start_pos = s_pos
+    send_end_pos = e_pos
 
 
 def way(people, s_pos, e_pos):
@@ -1602,12 +1760,6 @@ def main():
     global r_out
     r_out = 0
     begin = True
-    while side == -1:
-        pass
-    if side == 1:
-        master = False
-    if side == 0:
-        master == True
     global start_pos
     global end_pos
     global chess
@@ -1624,8 +1776,23 @@ def main():
     FPS = 30
     clock = pygame.time.Clock()
     writestate1("红方", p_pos, screen, (255, 0, 0))
+    pygame.display.flip()
+    while side == -1 :
+        time.sleep(1)
+        print(side)
+    print("aaaaaaaaaaaaaaaaaaa")
+    if side == 1:
+        print("后手")
+        recvie(0,0)
+
+
+        #master = False
+    if side == 0:
+        print("先手")
+        master = True
+
     while True:
-        global out
+        global out, sent_msg_toS
         i = 0
         clock.tick(FPS)
         pygame.display.flip()
@@ -1638,10 +1805,34 @@ def main():
                 tan = False
             else:
                 i = i + 1
+
+        if side == 0:
+            if sent_msg_toS == True:#是对方下棋子
+                send_msg()
+                print("对方！")
+                recvie(0, 0)
+              #  sent_msg_toS = False
+        else:
+            if sent_msg_toS == False:#是对方下棋子
+                send_msg()
+
+                recvie(0, 0)
+                print("收到了消息")
+                #sent_msg_toS = True
+        # if side ==0:
+        #     if master == False:
+        #         send_msg()
+        #         recvie(0,0)
+        # else:
+        #     if master ==True:
+        #         send_msg()
+        #         recvie(0, 0)
+
+        #用以确定先手
         for event in pygame.event.get():
             # print(pygame.event.__sizeof__())
             if event.type == QUIT:
-                sys.exit()
+                    sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
@@ -1967,7 +2158,9 @@ def main():
 if __name__ == "__main__":
     try:
         # writestate1("红方", p_pos, screen, (255, 0, 0))
-        #start_new_thread( recvie() )
+        #global side
+        #start_new_thread(recvie,(0,0) )
+        recvie(0,0)
         main()
     except SystemExit:
         pass

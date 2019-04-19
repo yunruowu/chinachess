@@ -2,14 +2,13 @@ import socket
 import sys
 import json
 import uuid
-
+import time
+from threading import Lock
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('127.0.0.1', 50005))
-
-global side
-global game_id
+side = -1
 game_id = ''
-
+mutex = Lock()
 msg = \
     {"type": 0,
      "msg": {
@@ -79,14 +78,16 @@ def re_ask():
 
 
 def match_success(data):
+    print("匹配成功！")
     global side
-    side = -1
     if data['status']==1:
         global game_id
         counterpart_name = data['counterpart_name']
         print(counterpart_name)
         game_id = data['game_id']
+        mutex.acquire()
         side = data['side']
+        mutex.release()
     else:
         print("error")
     if side == 1:#我方先手
@@ -94,7 +95,9 @@ def match_success(data):
         send_msg()
 
     else:#对方先手，等待消息
+        side = 0
         pass
+    print(side)
 def win():
     msg = {
         "type":3
@@ -103,7 +106,10 @@ def win():
     pass
 
 def recvie(src=None,dic=None):
+    global side
     data = client.recv(1024)
+    print("ahhhhhhhh")
+
     if not data:
         print("error!")
     print(data)

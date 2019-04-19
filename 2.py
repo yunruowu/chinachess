@@ -10,27 +10,36 @@
 # start_new_thread(a,(b))
 
 #print(b)
+from threading import Lock
 from _thread import *
 import _thread
 import time
 global b
 b = (1,2)
-def work_thread(a,x):
+mutex = Lock()
+def work_thread(a,x,c):
 
     cnt = 1
     global b
-    b = (2,3)
+    x= 1
+    while True:
+        b = (2,3)
     print ("Thread %d is runing..." )
 
 
 
 print(type(b))
-start_new_thread(work_thread,(1,2))
+nums = (0,0,0)
+start_new_thread(work_thread,nums)
+
 
 print ("Main thread doing an infinite wait loop...")
 
-while True:
+time.sleep(3)
+print(nums)
+while b == (2,3):
+    mutex.acquire()
     print(b)
-
+    mutex.release()
 while True:
     pass
