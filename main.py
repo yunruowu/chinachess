@@ -88,9 +88,9 @@ def deal(data):
     dst = [0, 0]
     dst[0] = data['dst']['x']
     dst[1] = data['dst']['y']
-    chess_move(change_xy_p(src[0]),change_xy_p(src[1]))
+    chess_move(change_xy_p(8-src[0]),change_xy_p(9-src[1]))
     begin = False
-    chess_move(change_xy_p(dst[0]),change_xy_p(dst[1]))
+    chess_move(change_xy_p(8-dst[0]),change_xy_p(9-dst[1]))
     begin = True
     print(dst,src)
 
@@ -648,16 +648,26 @@ def to_win():
             pass
         if chess == "帅":
             pos_shuai = red_chess[chess]["coordinate"]
+        if chess == "将":
+            pos_shuai = red_chess[chess]["coordinate"]
 
     for chess in black_chess.keys():
         if chess == "将":
             pos_jiang = black_chess[chess]["coordinate"]
-
+        if chess == "帅":
+            pos_jiang = black_chess[chess]["coordinate"]
     flag = 0
     if pos_jiang[0] == pos_shuai[0]:
-        for i in range(pos_shuai[1] + 1, pos_jiang[1]):
-            if position[i][pos_jiang[0]] != 0:
-                flag = flag + 1
+        print("位置")
+        print(pos_shuai, pos_jiang)
+        if pos_jiang[1] > pos_shuai[1]:
+            for i in range(pos_shuai[1] + 1, pos_jiang[1]):
+                if position[i][pos_jiang[0]] != 0:
+                    flag = flag + 1
+        if pos_jiang[1] < pos_shuai[1]:
+            for i in range(pos_jiang[1] + 1, pos_shuai[1]):
+                if position[i][pos_jiang[0]] != 0:
+                    flag = flag + 1
     else:
         flag = 1
     if flag == 0:
@@ -927,6 +937,24 @@ def way(people, s_pos, e_pos):
                 return 0
                 # print("请选择正确的落子点")
                 # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
+        if chess[0] == "将":
+            if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
+                ) or (abs(s_pos[0] - e_pos[0]) == 0 and abs(s_pos[1] - e_pos[1]) == 1):
+                    # print(s_pos, e_pos)
+
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+
+                    # writestate("移动方式错误！",w_pos,screen,(255,0,0))
+            else:
+
+                return 0
+                # print("请选择正确的落子点")
+                # writestate("请选择正确的落子点", w_pos, screen, (255, 0, 0))
         if chess[0] == "士":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
                 if (
@@ -940,7 +968,38 @@ def way(people, s_pos, e_pos):
                     return 0
             else:
                 return 0
+        if chess[0] == "仕":
+            if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
+                ) or (abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1):
+
+                    # print(s_pos, e_pos)
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                return 0
         if chess[0] == "相":
+            if e_pos[0] in range(0, 9) and e_pos[1] in range(0, 5):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
+                ) and (
+                        position[int((e_pos[1] + s_pos[1]) / 2)][
+                            int((e_pos[0] + s_pos[0]) / 2)
+                        ]
+                        == 0
+                ):
+                    # print(s_pos, e_pos)
+
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                return 0
+        if chess[0] == "象":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(0, 5):
                 if (
                         abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
@@ -1129,10 +1188,41 @@ def way(people, s_pos, e_pos):
                     return 1
                 else:
                     return 0
+        if chess[0] == "卒":
+            if s_pos[1] < 5:
+                if s_pos[0] == e_pos[0] and e_pos[1] - s_pos[1] == 1:
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+
+                    print("移动方式错误：兵")
+                    print("error1!")
+                    return 0
+            else:
+                if ((s_pos[0] == e_pos[0]) and (e_pos[1] - s_pos[1] == 1)) or (
+                        (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
+                ):
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
 
     if people == 1 or people == 3:  # 黑棋
         chess = get_black_chess(s_pos)
         if chess[0] == "将":
+            if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
+                ) or (abs(s_pos[0] - e_pos[0]) == 0 and abs(s_pos[1] - e_pos[1]) == 1):
+                    print(s_pos, e_pos)
+
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                return 0
+        if chess[0] == "帅":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
                 if (
                         abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 0
@@ -1158,7 +1248,38 @@ def way(people, s_pos, e_pos):
                     return 0
             else:
                 return 0
+        if chess[0] == "士":
+            if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1
+                ) or (abs(s_pos[0] - e_pos[0]) == 1 and abs(s_pos[1] - e_pos[1]) == 1):
+
+                    print(s_pos, e_pos)
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                return 0
         if chess[0] == "象":
+            if e_pos[0] in range(0, 9) and e_pos[1] in range(5, 10):
+                if (
+                        abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
+                ) and (
+                        position[int((e_pos[1] + s_pos[1]) / 2)][
+                            int((e_pos[0] + s_pos[0]) / 2)
+                        ]
+                        == 0
+                ):
+                    print(s_pos, e_pos)
+
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                return 0
+        if chess[0] == "相":
             if e_pos[0] in range(0, 9) and e_pos[1] in range(5, 10):
                 if (
                         abs(s_pos[0] - e_pos[0]) == 2 and abs(s_pos[1] - e_pos[1]) == 2
@@ -1335,6 +1456,21 @@ def way(people, s_pos, e_pos):
                     return 1
                 else:
                     return 0
+        if chess[0] == "兵":
+            if s_pos[1] > 4:
+                if s_pos[0] == e_pos[0] and e_pos[1] - s_pos[1] == -1:
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
+            else:
+                if ((s_pos[0] == e_pos[0]) and (e_pos[1] - s_pos[1] == -1)) or (
+                        (s_pos[1] - e_pos[1] == 0) and (abs(s_pos[0] - e_pos[0]) == 1)
+                ):
+                    move(people, s_pos, e_pos, chess)
+                    return 1
+                else:
+                    return 0
     dec1 = [1, 1, 1, 1]
     c1 = get_black_chess(s_pos)
     c2 = get_black_chess(e_pos)
@@ -1417,18 +1553,18 @@ def chess_move(position_x, position_y):
                     # writestate1("红方", p_pos, screen, (255, 255, 255))
                     if m == 1:
                         begin = True
-                        writestate("黑方", p_pos, screen, (0, 0, 0))
+                        writestate("己方", p_pos, screen, (0, 0, 0))
                     else:
-                        writestate("红方", p_pos, screen, (255, 0, 0))
+                        writestate("对方", p_pos, screen, (255, 0, 0))
                 else:  # 黑
 
                     m = way(1, start_pos, end_pos)
                     draw_chessonboard()
                     if m == 1:
-                        writestate("红方", p_pos, screen, (255, 0, 0))
+                        writestate("对方", p_pos, screen, (255, 0, 0))
                         begin = True
                     else:
-                        writestate("黑方", p_pos, screen, (0, 0, 0))
+                        writestate("己方", p_pos, screen, (0, 0, 0))
 
             else:
                 if master == False and position[y][x] > 7:  # 红棋吃子
@@ -1436,9 +1572,9 @@ def chess_move(position_x, position_y):
                     draw_chessonboard()
                     if m == 1:
                         begin = True
-                        writestate("黑方", p_pos, screen, (0, 0, 0))
+                        writestate("己方", p_pos, screen, (0, 0, 0))
                     else:
-                        writestate("红方", p_pos, screen, (255, 0, 0))
+                        writestate("对方", p_pos, screen, (255, 0, 0))
                 elif master == False and position[y][x] < 8:  # 红棋连续点了两次
                     print("重新选择红棋")
                     begin = False
@@ -1450,10 +1586,10 @@ def chess_move(position_x, position_y):
                         m = way(3, start_pos, end_pos)
                         draw_chessonboard()
                         if m == 0:
-                            writestate("黑方", p_pos, screen, (0, 0, 0))
+                            writestate("己方", p_pos, screen, (0, 0, 0))
                         else:
                             begin = True
-                            writestate("红方", p_pos, screen, (255, 0, 0))
+                            writestate("对方", p_pos, screen, (255, 0, 0))
                     else:
                         print("重新选择黑棋")
                         begin = False
@@ -1466,271 +1602,12 @@ def chess_move(position_x, position_y):
 
 
 def main():
-    global red_chess
-    global black_chess
-    print("we")
-    global tan
-    tan = False
-    red_chess = {
-        "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
-        "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
-        "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
-        "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
-        "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
-        "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
-        "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
-        "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
-        "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
-        "炮1": {
-            "color": "red",
-            "position": [a + 1 * length, a + 2 * length],
-            "coordinate": [1, 2],
-        },
-        "炮2": {
-            "color": "red",
-            "position": [a + 7 * length, a + 2 * length],
-            "coordinate": [7, 2],
-        },
-        "兵1": {
-            "color": "red",
-            "position": [a + 0 * length, a + 3 * length],
-            "coordinate": [0, 3],
-        },
-        "兵2": {
-            "color": "red",
-            "position": [a + 2 * length, a + 3 * length],
-            "coordinate": [2, 3],
-        },
-        "兵3": {
-            "color": "red",
-            "position": [a + 4 * length, a + 3 * length],
-            "coordinate": [4, 3],
-        },
-        "兵4": {
-            "color": "red",
-            "position": [a + 6 * length, a + 3 * length],
-            "coordinate": [6, 3],
-        },
-        "兵5": {
-            "color": "red",
-            "position": [a + 8 * length, a + 3 * length],
-            "coordinate": [8, 3],
-        },
-    }
-    black_chess = {
-        "将": {
-            "color": "black",
-            "position": [a + 4 * length, a + 9 * length],
-            "coordinate": [4, 9],
-        },
-        "仕1": {
-            "color": "black",
-            "position": [a + 3 * length, a + 9 * length],
-            "coordinate": [3, 9],
-        },
-        "仕2": {
-            "color": "black",
-            "position": [a + 5 * length, a + 9 * length],
-            "coordinate": [5, 9],
-        },
-        "象1": {
-            "color": "black",
-            "position": [a + 2 * length, a + 9 * length],
-            "coordinate": [2, 9],
-        },
-        "象2": {
-            "color": "black",
-            "position": [a + 6 * length, a + 9 * length],
-            "coordinate": [6, 9],
-        },
-        "马1": {
-            "color": "black",
-            "position": [a + 1 * length, a + 9 * length],
-            "coordinate": [1, 9],
-        },
-        "马2": {
-            "color": "black",
-            "position": [a + 7 * length, a + 9 * length],
-            "coordinate": [7, 9],
-        },
-        "車1": {
-            "color": "black",
-            "position": [a + 0 * length, a + 9 * length],
-            "coordinate": [0, 9],
-        },
-        "車2": {
-            "color": "black",
-            "position": [a + 8 * length, a + 9 * length],
-            "coordinate": [8, 9],
-        },
-        "炮1": {
-            "color": "black",
-            "position": [a + 1 * length, a + 7 * length],
-            "coordinate": [1, 7],
-        },
-        "炮2": {
-            "color": "black",
-            "position": [a + 7 * length, a + 7 * length],
-            "coordinate": [7, 7],
-        },
-        "卒1": {
-            "color": "black",
-            "position": [a + 0 * length, a + 6 * length],
-            "coordinate": [0, 6],
-        },
-        "卒2": {
-            "color": "black",
-            "position": [a + 2 * length, a + 6 * length],
-            "coordinate": [2, 6],
-        },
-        "卒3": {
-            "color": "black",
-            "position": [a + 4 * length, a + 6 * length],
-            "coordinate": [4, 6],
-        },
-        "卒4": {
-            "color": "black",
-            "position": [a + 6 * length, a + 6 * length],
-            "coordinate": [6, 6],
-        },
-        "卒5": {
-            "color": "black",
-            "position": [a + 8 * length, a + 6 * length],
-            "coordinate": [8, 6],
-        },
-    }
-    red_chess_r = {
-        "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
-        "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
-        "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
-        "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
-        "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
-        "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
-        "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
-        "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
-        "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
-        "炮1": {
-            "color": "red",
-            "position": [a + 1 * length, a + 2 * length],
-            "coordinate": [1, 2],
-        },
-        "炮2": {
-            "color": "red",
-            "position": [a + 7 * length, a + 2 * length],
-            "coordinate": [7, 2],
-        },
-        "兵1": {
-            "color": "red",
-            "position": [a + 0 * length, a + 3 * length],
-            "coordinate": [0, 3],
-        },
-        "兵2": {
-            "color": "red",
-            "position": [a + 2 * length, a + 3 * length],
-            "coordinate": [2, 3],
-        },
-        "兵3": {
-            "color": "red",
-            "position": [a + 4 * length, a + 3 * length],
-            "coordinate": [4, 3],
-        },
-        "兵4": {
-            "color": "red",
-            "position": [a + 6 * length, a + 3 * length],
-            "coordinate": [6, 3],
-        },
-        "兵5": {
-            "color": "red",
-            "position": [a + 8 * length, a + 3 * length],
-            "coordinate": [8, 3],
-        },
-    }
-    black_chess_r = {
-        "将": {
-            "color": "black",
-            "position": [a + 4 * length, a + 9 * length],
-            "coordinate": [4, 9],
-        },
-        "仕1": {
-            "color": "black",
-            "position": [a + 3 * length, a + 9 * length],
-            "coordinate": [3, 9],
-        },
-        "仕2": {
-            "color": "black",
-            "position": [a + 5 * length, a + 9 * length],
-            "coordinate": [5, 9],
-        },
-        "象1": {
-            "color": "black",
-            "position": [a + 2 * length, a + 9 * length],
-            "coordinate": [2, 9],
-        },
-        "象2": {
-            "color": "black",
-            "position": [a + 6 * length, a + 9 * length],
-            "coordinate": [6, 9],
-        },
-        "马1": {
-            "color": "black",
-            "position": [a + 1 * length, a + 9 * length],
-            "coordinate": [1, 9],
-        },
-        "马2": {
-            "color": "black",
-            "position": [a + 7 * length, a + 9 * length],
-            "coordinate": [7, 9],
-        },
-        "車1": {
-            "color": "black",
-            "position": [a + 0 * length, a + 9 * length],
-            "coordinate": [0, 9],
-        },
-        "車2": {
-            "color": "black",
-            "position": [a + 8 * length, a + 9 * length],
-            "coordinate": [8, 9],
-        },
-        "炮1": {
-            "color": "black",
-            "position": [a + 1 * length, a + 7 * length],
-            "coordinate": [1, 7],
-        },
-        "炮2": {
-            "color": "black",
-            "position": [a + 7 * length, a + 7 * length],
-            "coordinate": [7, 7],
-        },
-        "卒1": {
-            "color": "black",
-            "position": [a + 0 * length, a + 6 * length],
-            "coordinate": [0, 6],
-        },
-        "卒2": {
-            "color": "black",
-            "position": [a + 2 * length, a + 6 * length],
-            "coordinate": [2, 6],
-        },
-        "卒3": {
-            "color": "black",
-            "position": [a + 4 * length, a + 6 * length],
-            "coordinate": [4, 6],
-        },
-        "卒4": {
-            "color": "black",
-            "position": [a + 6 * length, a + 6 * length],
-            "coordinate": [6, 6],
-        },
-        "卒5": {
-            "color": "black",
-            "position": [a + 8 * length, a + 6 * length],
-            "coordinate": [8, 6],
-        },
-    }
-    draw_aboard()
-    draw_chessonboard()
-
+    global red_color
+    global black_color
+    # global red_chess
+    #global black_chess
     global position
+
     position = [
         [5, 4, 3, 2, 1, 2, 3, 4, 5],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1743,19 +1620,8 @@ def main():
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [12, 11, 10, 9, 8, 9, 10, 11, 12],
     ]
-    # position_r = copy.deepcopy(position)
-    position_r = [
-        [5, 4, 3, 2, 1, 2, 3, 4, 5],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 6, 0, 0, 0, 0, 0, 6, 0],
-        [7, 0, 7, 0, 7, 0, 7, 0, 7],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [14, 0, 14, 0, 14, 0, 14, 0, 14],
-        [0, 13, 0, 0, 0, 0, 0, 13, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [12, 11, 10, 9, 8, 9, 10, 11, 12],
-    ]
+    global red_chess
+    global black_chess
     global begin, master
     global r_out
     r_out = 0
@@ -1768,6 +1634,296 @@ def main():
     chess = 0
     global huinum
     huinum = 0
+    print("we")
+    global tan
+    tan = False
+    while side == -1 :
+        time.sleep(1)
+        print(side)
+    print("aaaaaaaaaaaaaaaaaaa")
+    if side == 1:
+
+        master = True
+        print("后手")
+        writestate1("对方", p_pos, screen, (255, 0, 0))
+        red_chess = {
+            "帅": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
+            "士1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
+            "士2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
+            "相1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
+            "相2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
+            "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
+            "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
+            "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
+            "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
+            "炮1": {
+                "color": "red",
+                "position": [a + 1 * length, a + 2 * length],
+                "coordinate": [1, 2],
+            },
+            "炮2": {
+                "color": "red",
+                "position": [a + 7 * length, a + 2 * length],
+                "coordinate": [7, 2],
+            },
+            "兵1": {
+                "color": "red",
+                "position": [a + 0 * length, a + 3 * length],
+                "coordinate": [0, 3],
+            },
+            "兵2": {
+                "color": "red",
+                "position": [a + 2 * length, a + 3 * length],
+                "coordinate": [2, 3],
+            },
+            "兵3": {
+                "color": "red",
+                "position": [a + 4 * length, a + 3 * length],
+                "coordinate": [4, 3],
+            },
+            "兵4": {
+                "color": "red",
+                "position": [a + 6 * length, a + 3 * length],
+                "coordinate": [6, 3],
+            },
+            "兵5": {
+                "color": "red",
+                "position": [a + 8 * length, a + 3 * length],
+                "coordinate": [8, 3],
+            },
+        }
+        black_chess = {
+            "将": {
+                "color": "black",
+                "position": [a + 4 * length, a + 9 * length],
+                "coordinate": [4, 9],
+            },
+            "仕1": {
+                "color": "black",
+                "position": [a + 3 * length, a + 9 * length],
+                "coordinate": [3, 9],
+            },
+            "仕2": {
+                "color": "black",
+                "position": [a + 5 * length, a + 9 * length],
+                "coordinate": [5, 9],
+            },
+            "象1": {
+                "color": "black",
+                "position": [a + 2 * length, a + 9 * length],
+                "coordinate": [2, 9],
+            },
+            "象2": {
+                "color": "black",
+                "position": [a + 6 * length, a + 9 * length],
+                "coordinate": [6, 9],
+            },
+            "马1": {
+                "color": "black",
+                "position": [a + 1 * length, a + 9 * length],
+                "coordinate": [1, 9],
+            },
+            "马2": {
+                "color": "black",
+                "position": [a + 7 * length, a + 9 * length],
+                "coordinate": [7, 9],
+            },
+            "車1": {
+                "color": "black",
+                "position": [a + 0 * length, a + 9 * length],
+                "coordinate": [0, 9],
+            },
+            "車2": {
+                "color": "black",
+                "position": [a + 8 * length, a + 9 * length],
+                "coordinate": [8, 9],
+            },
+            "炮1": {
+                "color": "black",
+                "position": [a + 1 * length, a + 7 * length],
+                "coordinate": [1, 7],
+            },
+            "炮2": {
+                "color": "black",
+                "position": [a + 7 * length, a + 7 * length],
+                "coordinate": [7, 7],
+            },
+            "卒1": {
+                "color": "black",
+                "position": [a + 0 * length, a + 6 * length],
+                "coordinate": [0, 6],
+            },
+            "卒2": {
+                "color": "black",
+                "position": [a + 2 * length, a + 6 * length],
+                "coordinate": [2, 6],
+            },
+            "卒3": {
+                "color": "black",
+                "position": [a + 4 * length, a + 6 * length],
+                "coordinate": [4, 6],
+            },
+            "卒4": {
+                "color": "black",
+                "position": [a + 6 * length, a + 6 * length],
+                "coordinate": [6, 6],
+            },
+            "卒5": {
+                "color": "black",
+                "position": [a + 8 * length, a + 6 * length],
+                "coordinate": [8, 6],
+            },
+        }
+        recvie(0, 0)
+
+        #master = False
+    if side == 0:
+        # global red_chess
+        # global black_chess
+        red_color = (0, 0, 0)
+        black_color = (255, 0, 0)
+        print("先手")
+        writestate1("己方", p_pos, screen, (255, 0, 0))
+        master = False
+        red_chess = {
+            "将": {"color": "red", "position": [a + 4 * length, a], "coordinate": [4, 0]},
+            "仕1": {"color": "red", "position": [a + 3 * length, a], "coordinate": [3, 0]},
+            "仕2": {"color": "red", "position": [a + 5 * length, a], "coordinate": [5, 0]},
+            "象1": {"color": "red", "position": [a + 2 * length, a], "coordinate": [2, 0]},
+            "象2": {"color": "red", "position": [a + 6 * length, a], "coordinate": [6, 0]},
+            "马1": {"color": "red", "position": [a + 1 * length, a], "coordinate": [1, 0]},
+            "马2": {"color": "red", "position": [a + 7 * length, a], "coordinate": [7, 0]},
+            "車1": {"color": "red", "position": [a + 0 * length, a], "coordinate": [0, 0]},
+            "車2": {"color": "red", "position": [a + 8 * length, a], "coordinate": [8, 0]},
+            "炮1": {
+                "color": "red",
+                "position": [a + 1 * length, a + 2 * length],
+                "coordinate": [1, 2],
+            },
+            "炮2": {
+                "color": "red",
+                "position": [a + 7 * length, a + 2 * length],
+                "coordinate": [7, 2],
+            },
+            "卒1": {
+                "color": "red",
+                "position": [a + 0 * length, a + 3 * length],
+                "coordinate": [0, 3],
+            },
+            "卒2": {
+                "color": "red",
+                "position": [a + 2 * length, a + 3 * length],
+                "coordinate": [2, 3],
+            },
+            "卒3": {
+                "color": "red",
+                "position": [a + 4 * length, a + 3 * length],
+                "coordinate": [4, 3],
+            },
+            "卒4": {
+                "color": "red",
+                "position": [a + 6 * length, a + 3 * length],
+                "coordinate": [6, 3],
+            },
+            "卒5": {
+                "color": "red",
+                "position": [a + 8 * length, a + 3 * length],
+                "coordinate": [8, 3],
+            },
+        }
+        black_chess = {
+            "帅": {
+                "color": "black",
+                "position": [a + 4 * length, a + 9 * length],
+                "coordinate": [4, 9],
+            },
+            "士1": {
+                "color": "black",
+                "position": [a + 3 * length, a + 9 * length],
+                "coordinate": [3, 9],
+            },
+            "士2": {
+                "color": "black",
+                "position": [a + 5 * length, a + 9 * length],
+                "coordinate": [5, 9],
+            },
+            "相1": {
+                "color": "black",
+                "position": [a + 2 * length, a + 9 * length],
+                "coordinate": [2, 9],
+            },
+            "相2": {
+                "color": "black",
+                "position": [a + 6 * length, a + 9 * length],
+                "coordinate": [6, 9],
+            },
+            "马1": {
+                "color": "black",
+                "position": [a + 1 * length, a + 9 * length],
+                "coordinate": [1, 9],
+            },
+            "马2": {
+                "color": "black",
+                "position": [a + 7 * length, a + 9 * length],
+                "coordinate": [7, 9],
+            },
+            "車1": {
+                "color": "black",
+                "position": [a + 0 * length, a + 9 * length],
+                "coordinate": [0, 9],
+            },
+            "車2": {
+                "color": "black",
+                "position": [a + 8 * length, a + 9 * length],
+                "coordinate": [8, 9],
+            },
+            "炮1": {
+                "color": "black",
+                "position": [a + 1 * length, a + 7 * length],
+                "coordinate": [1, 7],
+            },
+            "炮2": {
+                "color": "black",
+                "position": [a + 7 * length, a + 7 * length],
+                "coordinate": [7, 7],
+            },
+            "兵1": {
+                "color": "black",
+                "position": [a + 0 * length, a + 6 * length],
+                "coordinate": [0, 6],
+            },
+            "卒2": {
+                "color": "black",
+                "position": [a + 2 * length, a + 6 * length],
+                "coordinate": [2, 6],
+            },
+            "卒3": {
+                "color": "black",
+                "position": [a + 4 * length, a + 6 * length],
+                "coordinate": [4, 6],
+            },
+            "卒4": {
+                "color": "black",
+                "position": [a + 6 * length, a + 6 * length],
+                "coordinate": [6, 6],
+            },
+            "卒5": {
+                "color": "black",
+                "position": [a + 8 * length, a + 6 * length],
+                "coordinate": [8, 6],
+            },
+        }
+
+
+
+
+    draw_aboard()
+    draw_chessonboard()
+
+
+
+
+
     # writestate1("红方", p_pos, screen, (255, 0, 0))
     global position_r1, red_chess_r1, black_chess_r1
     global position_r2, red_chess_r2, black_chess_r2
@@ -1775,21 +1931,8 @@ def main():
     red_chess_r1 = red_chess
     FPS = 30
     clock = pygame.time.Clock()
-    writestate1("红方", p_pos, screen, (255, 0, 0))
+
     pygame.display.flip()
-    while side == -1 :
-        time.sleep(1)
-        print(side)
-    print("aaaaaaaaaaaaaaaaaaa")
-    if side == 1:
-        print("后手")
-        recvie(0,0)
-
-
-        #master = False
-    if side == 0:
-        print("先手")
-        master = True
 
     while True:
         global out, sent_msg_toS
@@ -1857,10 +2000,10 @@ def main():
                         draw_chessonboard()
                         master = not master
                     if master == True:
-                        writestate("红方", p_pos, screen, (255, 0, 0))
+                        writestate("对方", p_pos, screen, (255, 0, 0))
 
                     else:
-                        writestate("黑方", p_pos, screen, (0, 0, 0))
+                        writestate("己方", p_pos, screen, (0, 0, 0))
                 if (
                         pos_x > a + 11 * length + 3
                         and pos_x < a + 13 * length + 6
@@ -2130,7 +2273,7 @@ def main():
                     begin = True
                     master = True
                     draw_chessonboard()
-                    writestate("红方", p_pos, screen, (255, 0, 0))
+                    writestate("对方", p_pos, screen, (255, 0, 0))
                     out = 5
                     # draw_chessonboard()
                 else:
