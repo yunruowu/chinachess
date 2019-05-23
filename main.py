@@ -8,13 +8,14 @@ from pygame.locals import *
 from _thread import *
 import time
 from threading import Thread, Lock
-
+import datetime
 import socket
 import sys
 import json
 import uuid
 import time
 from threading import Lock
+
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('127.0.0.1', 50005))
 side = -1
@@ -22,18 +23,19 @@ game_id = ''
 mutex = Lock()
 
 
-#改变坐标
+global time1,time2
+
+# 改变坐标
 def change_xy_p(x):
-    global a,length
-    return a+x*length
+    global a, length
+    return a + x * length
 
 
-
-
+# 申请加入
 msg = \
     {"type": 0,
      "msg": {
-         "name": "小明"
+         "name": "xyy"
      }
      }
 packet = json.dumps(msg)
@@ -42,23 +44,24 @@ client.send(packet)
 
 
 def connect_ser(
-        msg = \
+        msg= \
                 {"type": 0,
                  "msg": {
                      "name": "小明"
                  }
-        }
+                 }
 ):
     packet = json.dumps(msg)
     packet = packet.encode('utf-8')
     client.send(packet)
 
+
 def send_msg():
     global sent_msg_toS
     print("sss")
-    global send_end_pos,send_start_pos,game_id
+    global send_end_pos, send_start_pos, game_id
     print(game_id)
-    print(send_start_pos,send_end_pos)
+    print(send_start_pos, send_end_pos)
     msg = {
         "type": 1,
         "msg": {
@@ -74,11 +77,18 @@ def send_msg():
             }
         }
     }
+    #recvie(0,0)
+    time2 = datetime.datetime.now()
+    print(time1,time2)
+    if (time2-time1).seconds > 30:
+        win()
+        exit()
     connect_ser(msg)
-    #sent_msg_toS = not sent_msg_toS
+    # sent_msg_toS = not sent_msg_toS
+
 
 def deal(data):
-    global game_id,begin
+    global game_id, begin
 
     game_id = data['game_id']
     side = data['side']
@@ -88,11 +98,32 @@ def deal(data):
     dst = [0, 0]
     dst[0] = data['dst']['x']
     dst[1] = data['dst']['y']
-    chess_move(change_xy_p(8-src[0]),change_xy_p(9-src[1]))
+    print(dst, src)
+
+    chess_move(change_xy_p(8 - src[0]), change_xy_p(9 - src[1]))
     begin = False
-    chess_move(change_xy_p(8-dst[0]),change_xy_p(9-dst[1]))
+    chess_move(change_xy_p(8 - dst[0]), change_xy_p(9 - dst[1]))
     begin = True
-    print(dst,src)
+    print(dst, src)
+
+
+def AI(jumian):
+    """
+    search()
+    return start ,end
+
+    :param jumian:
+    :return:
+"""
+
+    start_x = input("sx:")
+    start_y = input("sy:")
+    end_x = input("ex:")
+    end_y = input("ey:")
+
+    chess_move(start_x,start_y)
+    begin = False
+    chess_move(end_x,end_y)
 
 
 def re_ask():
@@ -109,7 +140,7 @@ def re_ask():
 def match_success(data):
     print("匹配成功！")
     global side
-    if data['status']==1:
+    if data['status'] == 1:
         global game_id
         counterpart_name = data['counterpart_name']
         print(counterpart_name)
@@ -119,24 +150,46 @@ def match_success(data):
         mutex.release()
     else:
         print("error")
-    if side == 0:#我方先手
+    if side == 0:  # 我方先手
         print("move")
-        #send_msg()
+        # send_msg()
 
-    else:#对方先手，等待消息
+    else:  # 对方先手，等待消息
         pass
     print(side)
+
+
 def win():
+    global side
     msg = {
-        "type":3
+        "type": 3,
+        "side": side
     }
+
+    writestate("我方胜利", w_pos, screen, (0, 0, 0))
+    draw_chessonboard()
     connect_ser(msg)
+    exit()
     pass
 
-def recvie(src=None,dic=None):
+
+def exit_net():
+    global game_id, side
+    msg = {
+        "type": 2,
+        "msg": {
+            "request": "exit",
+            "game_id": game_id,
+            "side": side
+        }
+    }
+    connect_ser(msg)
+
+
+def recvie(src=None, dic=None):
     global side
     data = client.recv(1024)
-    print("ahhhhhhhh")
+    print(data)
 
     if not data:
         print("error!")
@@ -180,15 +233,19 @@ hua = 0
 global out
 out = 0
 
-#为了全局
+# 为了全局
 begin = True
 master = True
 
-
-#是否向服务器发信息
+# 实现长将军
+# global num_jiang
+num_jiang_hong = 0
+num_jiang_hei = 0
+# 是否向服务器发信息
 sent_msg_toS = False
-send_start_pos=[0,0]
-send_end_pos = [0,0]
+send_start_pos = [0, 0]
+send_end_pos = [0, 0]
+
 
 def writestate(str, set_pos, screen, color):
     tan = True
@@ -499,39 +556,141 @@ def draw_aboard():
     # writestate("汉界", (a + 11 * length, a + 2.75 * length), screen,(62, 61, 50))
     global hua
     if hua == 0:
-        writestate1("红方3", p_pos, screen, (255, 0, 0))
+        writestate1("己方3", p_pos, screen, (255, 0, 0))
         hua = hua + 1
 
 
 def draw_chessonboard():
-    global r_out, hua
+    global r_out, hua, side, game_id
     print(hua)
+    global shu_r,shu_b
     screen.fill([255, 255, 255])
+    msg = {}
+    print(side,shu_b,shu_r)
+    if side == 1:
+        if shu_r == 1:
+            msg = {
+                "type": 2,
+                "msg": {
+                    "request": "exit",
+                    "game_id": game_id,
+                    "side": side
+                }
+            }
+            connect_ser(msg)
+            exit()
+
+    if side == 0:
+        if shu_b == 1:
+            msg = {
+                "type": 2,
+                "msg": {
+                    "request": "exit",
+                    "game_id": game_id,
+                    "side": side
+                }
+            }
+            connect_ser(msg)
+            exit()
+
+
+
     if out == 6:
-        writestate("黑方胜利", w_pos, screen, (0, 0, 0))
+        writestate("对方胜利1", w_pos, screen, (0, 0, 0))
+        msg = {
+            "type": 2,
+            "msg": {
+                "request": "exit",
+                "game_id": game_id,
+                "side": side
+            }
+        }
+        #connect_ser(msg)
+        # exit()
     if out == 7:
-        writestate("红方胜利", w_pos, screen, (255, 0, 0))
+        writestate("己方胜利2", w_pos, screen, (255, 0, 0))
+        msg = {
+            "type": 2,
+            "msg": {
+                "request": "exit",
+                "game_id": game_id,
+                "side": side
+            }
+        }
+        #connect_ser(msg)
+        # exit()
+    # changjaing
+    if out == 8:
+        writestate("对方胜利3", w_pos, screen, (0, 0, 0))
+        msg = {
+            "type": 4,
+            "msg": {
+                "request": "exit",
+                "game_id": game_id,
+                "side": 1 - side
+            }
+        }
+        # i#f side == 0:
+
+        #connect_ser(msg)
+        # exit()
+    if out == 9:
+        writestate("己方胜利4", w_pos, screen, (255, 0, 0))
+        msg = {
+            "type": 4,
+            "msg": {
+                "request": "exit",
+                "game_id": game_id,
+                "side": 1 - side
+            }
+        }
+        #connect_ser(msg)
+    # exit()
     if out == 0:
         print("122233333333333333333333")
         if hua != 1:
             print(hua)
             writestate("", w_pos, screen, (255, 255, 255))
             print("122233sdffffffffff33333333333")
+
     else:
         if out == 1:
-            writestate("黑方胜利", w_pos, screen, (0, 0, 0))
+            writestate("对方胜利5", w_pos, screen, (0, 0, 0))
             print("wwwwwwwwwwwwwwwww")
+            msg = {
+                "type": 2,
+                "msg": {
+                    "request": "exit",
+                    "game_id": game_id,
+                    "side": side
+                }
+            }
+            #connect_ser(msg)
+            # exit()
         if out == 2:
-            writestate("红方胜利", w_pos, screen, (255, 0, 0))
+            writestate("己方胜利6", w_pos, screen, (255, 0, 0))
             print("eeeeeeeeeeeeeeeeeee")
+            msg = {
+                "type": 2,
+                "msg": {
+                    "request": "exit",
+                    "game_id": game_id,
+                    "side": 1 - side
+                }
+            }
+            #connect_ser(msg)
+            # exit()
         if out == 3:
-            writestate("黑方将军", w_pos, screen, (0, 0, 0))
+            writestate("将军", w_pos, screen, (0, 0, 0))
             print("dddddddddddddddddddddddd")
         if out == 4:
-            writestate("红方将军", w_pos, screen, (255, 0, 0))
+            writestate("将军", w_pos, screen, (255, 0, 0))
             print("1ffffffffffffffffffffff3")
 
         r_out = out
+    # if msg != {}:
+    # connect_ser(msg)
+
     #           time.sleep(1)
     draw_aboard()
     # time.sleep(1)
@@ -636,25 +795,45 @@ def get_black_chess(pos):
     return None
 
 
+state_jiang_hong = False
+state_jiang_hei = False
+shu_r = 0
+shu_b = 0
+
 # 判断是否将军
 def to_win():
-    # 红
-    # global red_chess, black_chess, position
-    global out
+    # 己
+    global red_chess, black_chess, position
+    global shu_r, shu_b
+    global out, state_jiang_hei, state_jiang_hong, master, num_jiang_hong, num_jiang_hei
     pos_shuai = []
     pos_jiang = []
     for chess in red_chess.keys():
-        if red_chess[chess]["coordinate"] == [-2, -2]:
-            pass
+        #if red_chess[chess]["coordinate"] == [-2, -2]:
+            #pass
         if chess == "帅":
+            if red_chess[chess]["coordinate"] == [-2, -2]:  # 红棋输
+                shu_r = 1
+                print(chess,red_chess[chess]["coordinate"])
+                print()
             pos_shuai = red_chess[chess]["coordinate"]
         if chess == "将":
+            if red_chess[chess]["coordinate"] == [-2, -2]:  # 黑棋输
+                shu_b = 1
+                print(chess, red_chess[chess]["coordinate"])
             pos_shuai = red_chess[chess]["coordinate"]
 
     for chess in black_chess.keys():
         if chess == "将":
+            if black_chess[chess]["coordinate"] == [-2, -2]:  # 红棋输
+                shu_r = 1
+                print(chess, black_chess[chess]["coordinate"],shu_r)
             pos_jiang = black_chess[chess]["coordinate"]
+
         if chess == "帅":
+            if black_chess[chess]["coordinate"] == [-2, -2]:  # 黑棋输
+                shu_b = 1
+                print(chess, black_chess[chess]["coordinate"],shu_b)
             pos_jiang = black_chess[chess]["coordinate"]
     flag = 0
     if pos_jiang[0] == pos_shuai[0]:
@@ -672,12 +851,12 @@ def to_win():
         flag = 1
     if flag == 0:
         if master == 0:
-            writestate("黑方胜利1", w_pos, screen, (0, 0, 0))
-            out = 1
+            writestate("对方胜利1", w_pos, screen, (0, 0, 0))
+            out = 8
         else:
-            writestate("红方胜利1", w_pos, screen, (255, 0, 0))
-            out = 2
-    # 红方将军
+            writestate("己方胜利1", w_pos, screen, (255, 0, 0))
+            out = 9
+    # 将军
     for chess in red_chess.keys():
 
         pos = red_chess[chess]["coordinate"]
@@ -688,9 +867,11 @@ def to_win():
                 if (abs(pos[0] - pos_jiang[0]) == 1 and pos[1] == pos_jiang[1]) or (
                         pos_jiang[1] - pos[1] == 1 and pos[0] == pos_jiang[0]
                 ):
-                    writestate("红方将军", w_pos, screen, (255, 0, 0))
+                    writestate("将军", w_pos, screen, (255, 0, 0))
                     out = 4
-                # print("红方将军")
+                    # num_jiang_hong = num_jiang_hong + 1
+                    state_jiang_hong = True
+                # print("将军")
                 else:
                     pass
             if chess[0] == "車":
@@ -720,7 +901,9 @@ def to_win():
                     xx = 1
 
                 if xx == 0:
-                    writestate("红方将军", w_pos, screen, (255, 0, 0))
+                    writestate("将军", w_pos, screen, (255, 0, 0))
+                    # num_jiang_hong = num_jiang_hong + 1
+                    state_jiang_hong = True
                     out = 4
                 else:
                     pass
@@ -741,7 +924,9 @@ def to_win():
                 else:
                     xx = 1
                 if xx == 0:
-                    writestate("红方将军", w_pos, screen, (255, 0, 0))
+                    writestate("将军", w_pos, screen, (255, 0, 0))
+                    # num_jiang_hong = num_jiang_hong + 1
+                    state_jiang_hong = True
                     out = 4
                 else:
                     pass
@@ -772,13 +957,21 @@ def to_win():
                     xx = 0
 
                 if xx == 1:
-                    writestate("红方将军", w_pos, screen, (255, 0, 0))
+                    writestate("将军", w_pos, screen, (255, 0, 0))
+                    # num_jiang_hong = num_jiang_hong + 1
+                    state_jiang_hong = True
                     out = 4
                 else:
                     pass
-    # 黑方将军
-    for chess in black_chess.keys():
+    if master == False:
+        if state_jiang_hong == True:
+            num_jiang_hong = state_jiang_hong + 1
+            state_jiang_hong = False
+        else:
+            num_jiang_hong = 0
 
+    # 将军
+    for chess in black_chess.keys():
         pos = black_chess[chess]["coordinate"]
         if black_chess[chess]["coordinate"] == [-2, -2]:
             pass
@@ -787,7 +980,8 @@ def to_win():
                 if (abs(pos[0] - pos_shuai[0]) == 1 and pos[1] == pos_shuai[1]) or (
                         pos_shuai[1] - pos[1] == -1 and pos[0] == pos_shuai[0]
                 ):
-                    writestate("黑方将军", w_pos, screen, (0, 0, 0))
+                    writestate("将军", w_pos, screen, (0, 0, 0))
+                    state_jiang_hei = True
                     out = 3
                 else:
                     pass
@@ -818,7 +1012,8 @@ def to_win():
                     xx = 1
 
                 if xx == 0:
-                    writestate("黑方将军", w_pos, screen, (0, 0, 0))
+                    writestate("将军", w_pos, screen, (0, 0, 0))
+                    state_jiang_hei = True
                     out = 3
                 else:
                     pass
@@ -839,7 +1034,8 @@ def to_win():
                 else:
                     xx = 1
                 if xx == 0:
-                    writestate("黑方将军", w_pos, screen, (0, 0, 0))
+                    writestate("将军", w_pos, screen, (0, 0, 0))
+                    state_jiang_hei = True
                     out = 3
                 else:
                     pass
@@ -870,35 +1066,49 @@ def to_win():
                     xx = 0
 
                 if xx == 1:
-                    writestate("黑方将军", w_pos, screen, (0, 0, 0))
+                    writestate("将军", w_pos, screen, (0, 0, 0))
+                    state_jiang_hei = True
                     out = 3
                 else:
                     pass
+    if master == True:
+        if state_jiang_hei == True:
+            num_jiang_hei = num_jiang_hong + 1
+            state_jiang_hei = False
+        else:
+            num_jiang_hei = 0
+    print(num_jiang_hong, num_jiang_hei)
+
+    print("dayuinnasds1111111111111111111111111111111111111111")
+    if num_jiang_hei == 3:
+        out = 2  # 己胜
+    if num_jiang_hong == 3:
+        out = 1  # 对胜
 
 
 def move(p, s_pos, e_pos, chess):
-    global out,sent_msg_toS,send_end_pos,send_start_pos
-    if p == 0:  # 红移动
+    global out, sent_msg_toS, send_end_pos, send_start_pos
+    if p == 0:  # 己移动
         red_chess[chess]["coordinate"] = e_pos
-    if p == 1:  # 黑移动
+    if p == 1:  # 对移动
         black_chess[chess]["coordinate"] = e_pos
-    if p == 2:  # 红方吃子
+    if p == 2:  # 己方吃子
         red_chess[chess]["coordinate"] = e_pos
         chess_1 = get_black_chess(e_pos)
         black_chess[chess_1]["coordinate"] = [-2, -2]
-        if chess_1 == "将":
+        if chess_1 == "将" or chess_1 == "帅":
             # draw_chessonboard()
-            writestate("红方胜利", w_pos, screen, (255, 0, 0))
+            writestate("己方胜利", w_pos, screen, (255, 0, 0))
             out = 7
             # pygame.display.update()
             # draw_chessonboard()
             # sys.exit()
-    if p == 3:  # 黑方吃子
+    if p == 3:  # 对方吃子
         black_chess[chess]["coordinate"] = e_pos
         chess_1 = get_red_chess(e_pos)
         red_chess[chess_1]["coordinate"] = [-2, -2]
-        if chess_1 == "帅":
-            writestate("黑方胜利", w_pos, screen, (0, 0, 0))
+        if chess_1 == "帅" or chess_1 == "将":
+            writestate("对方胜利", w_pos, screen, (0, 0, 0))
             # pygame.display.update()
             out = 6
             # draw_chessonboard()
@@ -917,7 +1127,7 @@ def move(p, s_pos, e_pos, chess):
 
 def way(people, s_pos, e_pos):
     global master
-    if people == 0 or people == 2:  # 红棋
+    if people == 0 or people == 2:  # 己棋
         chess = get_red_chess(s_pos)
         if chess[0] == "帅":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(0, 3):
@@ -1207,7 +1417,7 @@ def way(people, s_pos, e_pos):
                 else:
                     return 0
 
-    if people == 1 or people == 3:  # 黑棋
+    if people == 1 or people == 3:  # 对棋
         chess = get_black_chess(s_pos)
         if chess[0] == "将":
             if e_pos[0] in range(3, 6) and e_pos[1] in range(7, 10):
@@ -1481,9 +1691,11 @@ def way(people, s_pos, e_pos):
 def chess_move(position_x, position_y):
     global begin
     global master, start_pos
+    global position
     if begin == True:  # 选择第一个棋子
         # position_x, position_y = pygame.mouse.get_pos()
         # 鼠标点击的位置在棋盘内
+        print(position)
         if (
                 (position_x < a + 8 * length + length / 2)
                 and (position_y < a + 9 * length + length / 2)
@@ -1493,10 +1705,10 @@ def chess_move(position_x, position_y):
             x = int((position_x - a + length / 2) / length)
             y = int((position_y - a + length / 2) / length)
             print(x, y, "qi")
-            if master == True:  # 红方
-                # writestate("红方", p_pos, screen, (255, 0, 0))
-                if position[y][x] == 0 or position[y][x] > 7:  # 选择了红棋
-                    print("请选择一个红方棋子！！！")
+            if master == True:  # 己方
+                # writestate("己方", p_pos, screen, (255, 0, 0))
+                if position[y][x] == 0 or position[y][x] > 7:  # 选择了己棋
+                    print("请选择一个己方棋子！！！")
                     master = True
                     # begin = not begin
                 else:
@@ -1505,10 +1717,10 @@ def chess_move(position_x, position_y):
                     print(master)
                     start_pos = [x, y]
                     begin = not begin
-            else:  # 黑方
+            else:  # 对方
                 if position[y][x] == 0 or position[y][x] < 8:
-                    # writestate("黑方", p_pos, screen, (0, 0, 0))
-                    print("请选择一个黑方棋子！！！")
+                    # writestate("对方", p_pos, screen, (0, 0, 0))
+                    print("请选择一个对方棋子！！！")
                     master = False
                 # begin = not begin
                 else:
@@ -1544,19 +1756,19 @@ def chess_move(position_x, position_y):
             # 由于master已经修改，所以此时的master为相反的
             if position[y][x] == 0:  # 位置为空,移动
                 # global start_pos
-                if master == False:  # 红
-                    # writestate1("红方", p_pos, screen, (255, 0, 0))
+                if master == False:  # 己
+                    # writestate1("己方", p_pos, screen, (255, 0, 0))
                     m = way(0, start_pos, end_pos)
                     draw_chessonboard()
                     print("h1y")
                     print(master)
-                    # writestate1("红方", p_pos, screen, (255, 255, 255))
+                    # writestate1("己方", p_pos, screen, (255, 255, 255))
                     if m == 1:
                         begin = True
                         writestate("己方", p_pos, screen, (0, 0, 0))
                     else:
                         writestate("对方", p_pos, screen, (255, 0, 0))
-                else:  # 黑
+                else:  # 对
 
                     m = way(1, start_pos, end_pos)
                     draw_chessonboard()
@@ -1567,7 +1779,7 @@ def chess_move(position_x, position_y):
                         writestate("己方", p_pos, screen, (0, 0, 0))
 
             else:
-                if master == False and position[y][x] > 7:  # 红棋吃子
+                if master == False and position[y][x] > 7:  # 己棋吃子
                     m = way(2, start_pos, end_pos)
                     draw_chessonboard()
                     if m == 1:
@@ -1575,14 +1787,14 @@ def chess_move(position_x, position_y):
                         writestate("己方", p_pos, screen, (0, 0, 0))
                     else:
                         writestate("对方", p_pos, screen, (255, 0, 0))
-                elif master == False and position[y][x] < 8:  # 红棋连续点了两次
-                    print("重新选择红棋")
+                elif master == False and position[y][x] < 8:  # 己棋连续点了两次
+                    print("重新选择己棋")
                     begin = False
                     master = False
                     start_pos = end_pos
 
                 else:
-                    if master == True and position[y][x] < 8:  # 黑旗吃子
+                    if master == True and position[y][x] < 8:  # 对旗吃子
                         m = way(3, start_pos, end_pos)
                         draw_chessonboard()
                         if m == 0:
@@ -1591,7 +1803,7 @@ def chess_move(position_x, position_y):
                             begin = True
                             writestate("对方", p_pos, screen, (255, 0, 0))
                     else:
-                        print("重新选择黑棋")
+                        print("重新选择对棋")
                         begin = False
                         master = True
                         start_pos = end_pos
@@ -1602,10 +1814,12 @@ def chess_move(position_x, position_y):
 
 
 def main():
+    global time1
     global red_color
     global black_color
+    global num_jiang_hei, num_jiang_hong
     # global red_chess
-    #global black_chess
+    # global black_chess
     global position
 
     position = [
@@ -1637,12 +1851,11 @@ def main():
     print("we")
     global tan
     tan = False
-    while side == -1 :
+    while side == -1:
         time.sleep(1)
         print(side)
     print("aaaaaaaaaaaaaaaaaaa")
     if side == 1:
-
         master = True
         print("后手")
         writestate1("对方", p_pos, screen, (255, 0, 0))
@@ -1775,8 +1988,8 @@ def main():
             },
         }
         recvie(0, 0)
-
-        #master = False
+        time1 = datetime.datetime.now()
+        # master = False
     if side == 0:
         # global red_chess
         # global black_chess
@@ -1914,17 +2127,10 @@ def main():
             },
         }
 
-
-
-
     draw_aboard()
     draw_chessonboard()
 
-
-
-
-
-    # writestate1("红方", p_pos, screen, (255, 0, 0))
+    # writestate1("己方", p_pos, screen, (255, 0, 0))
     global position_r1, red_chess_r1, black_chess_r1
     global position_r2, red_chess_r2, black_chess_r2
     red_chess_r2 = red_chess
@@ -1933,9 +2139,11 @@ def main():
     clock = pygame.time.Clock()
 
     pygame.display.flip()
-
+    t1 = datetime.datetime.now()
     while True:
-        global out, sent_msg_toS
+        global out, sent_msg_toS, num_jiang_hei, num_jiang_hong
+        # print("我是ssss")
+        # print(num_jiang_hong,num_jiang_hei)
         i = 0
         clock.tick(FPS)
         pygame.display.flip()
@@ -1950,18 +2158,47 @@ def main():
                 i = i + 1
 
         if side == 0:
-            if sent_msg_toS == True:#是对方下棋子
+            if sent_msg_toS == True:  # 是对方下棋子
                 send_msg()
                 print("对方！")
-                recvie(0, 0)
-              #  sent_msg_toS = False
-        else:
-            if sent_msg_toS == False:#是对方下棋子
-                send_msg()
 
+                # 对方超时
+                # if (datetime.datetime.now() - t1 ).seconds == 10:
+                # msg1 = {
+                #     "type": 2,
+                #     "msg": {
+                #         "request": "exit",
+                #         "game_id": "690044a7-1400-4f2e-8003-4df850f21ac2",
+                #         "side": side
+                #     }
+                # }
+                # connect_ser(msg1)
+                # exit()
+                #  send_msg()
                 recvie(0, 0)
+                t1 = datetime.datetime.now()
+            #  sent_msg_toS = False
+        else:
+            if sent_msg_toS == False:  # 是对方下棋子
+
+                # 对方超时
+                if (datetime.datetime.now() - t1).seconds == 10:
+                    msg1 = {
+                        "type": 2,
+                        "msg": {
+                            "request": "exit",
+                            "game_id": "690044a7-1400-4f2e-8003-4df850f21ac2",
+                            "side": side
+                        }
+                    }
+                    connect_ser(msg1)
+                    exit()
+                send_msg()
+                recvie(0, 0)
+                time1 = datetime.datetime.now()
+                t1 = datetime.datetime.now()
                 print("收到了消息")
-                #sent_msg_toS = True
+                # sent_msg_toS = True
         # if side ==0:
         #     if master == False:
         #         send_msg()
@@ -1971,11 +2208,12 @@ def main():
         #         send_msg()
         #         recvie(0, 0)
 
-        #用以确定先手
+        # 用以确定先手
         for event in pygame.event.get():
             # print(pygame.event.__sizeof__())
             if event.type == QUIT:
-                    sys.exit()
+                exit_net()
+                sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
                 pos_x, pos_y = pygame.mouse.get_pos()
@@ -2269,6 +2507,7 @@ def main():
                         },
                     }:
                         print(red_chess)
+                        exit_net()
                         exit()
                     begin = True
                     master = True
@@ -2300,10 +2539,12 @@ def main():
 
 if __name__ == "__main__":
     try:
-        # writestate1("红方", p_pos, screen, (255, 0, 0))
-        #global side
-        #start_new_thread(recvie,(0,0) )
-        recvie(0,0)
+        global time1
+        # writestate1("己方", p_pos, screen, (255, 0, 0))
+        # global side
+        # start_new_thread(recvie,(0,0) )
+        recvie(0, 0)
+        time1 = datetime.datetime.now()
         main()
     except SystemExit:
         pass
